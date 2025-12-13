@@ -4,6 +4,6 @@ korean_lunar_calendar
 pandas
 altair
 datetime
-date
-time
-re
+#date
+#time
+#re
