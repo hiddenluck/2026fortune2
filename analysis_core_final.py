@@ -400,7 +400,7 @@ def get_system_instruction() -> str:
 """
 
 
-def get_final_ai_prompt(ilgan: str, saju_data: Dict, daewoon_info: Dict, sewoon_info: Dict, q: str, events: str, clinical_data_str: str, pattern_analysis_str: str = "") -> str:
+def get_final_ai_prompt(ilgan: str, saju_data: Dict, daewoon_info: Dict, sewoon_info: Dict, q: str, events: str, clinical_data_str: str, pattern_analysis_str: str = "", profile_data: Dict = None) -> str:
     """
     최종 통합된 AI 분석 요청 프롬프트를 생성합니다.
     
@@ -419,6 +419,7 @@ def get_final_ai_prompt(ilgan: str, saju_data: Dict, daewoon_info: Dict, sewoon_
         events: 고객 인생 이력
         clinical_data_str: 임상 데이터 문자열
         pattern_analysis_str: 발동된 특수 패턴 분석 문자열 (NEW)
+        profile_data: 고객 프로필 정보 (직업, 결혼 상태, 자녀 유무) (NEW)
     """
     # (TEN_GAN_PERSONA는 saju_data.py에서 가져온다고 가정)
     persona = TEN_GAN_PERSONA.get(ilgan, {"style": "따뜻함", "instruction": "공감"}) 
@@ -492,6 +493,18 @@ def get_final_ai_prompt(ilgan: str, saju_data: Dict, daewoon_info: Dict, sewoon_
 - 일간 Style: {persona['style']} 
 - 어조 Instruction: {persona['instruction']}
 
+[고객 프로필 정보]
+- 직업 상태: {profile_data.get('job', '정보 없음') if profile_data else '정보 없음'}
+- 결혼 상태: {profile_data.get('marital', '정보 없음') if profile_data else '정보 없음'}
+- 자녀 유무: {'있음' if profile_data and profile_data.get('children') else '없음'}
+
+⚠️ **중요: 위 고객 프로필에 따라 분석 내용을 맞춤화하세요.**
+- 학생/미성년자: 학업운, 시험운, 진로 상담에 집중. 연애운/결혼운 대신 '인간관계'로 표현.
+- 미혼/싱글: 연애운, 인연 시기, 자기 성장에 집중.
+- 기혼/자녀 있음: 가정 화목, 부부 소통, 자녀 교육에 집중.
+- 직장인: 승진, 이직, 직장 내 인간관계에 집중.
+- 사업가/프리랜서: 수익화, 파트너십, 확장 시기에 집중.
+
 [고객 질문]
 {q}
 
@@ -560,7 +573,8 @@ def analyze_ai_report(manse_info: Dict, daewoon_info: Dict, full_q: str, profile
         q=full_q, 
         events=events, 
         clinical_data_str=clinical_data_str,
-        pattern_analysis_str=pattern_analysis_str  # NEW: 패턴 분석 결과 추가
+        pattern_analysis_str=pattern_analysis_str,  # NEW: 패턴 분석 결과 추가
+        profile_data=profile_data  # NEW: 고객 프로필 데이터 추가
     )
     
     # 4. AI API 호출 및 응답 처리
