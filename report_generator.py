@@ -3,6 +3,12 @@
 - 글래스피치 (Warm 3D Glassmorphism) 디자인 적용
 - Python 데이터를 HTML에 동적으로 주입
 - 무료/프리미엄 리포트 생성 함수 제공
+
+[복구된 기능]:
+1. 컬러풀한 사주명식 (오행별 색상: 木=녹색, 火=빨강, 土=노랑, 金=흰색, 水=파랑)
+2. 십신 클릭 시 설명 표시 (모달 팝업)
+3. 나의 스탯 변화 레이더 차트 (radar_chart 데이터 기반)
+4. 월별 가이드 (라인 그래프 + 월 버튼 클릭 시 상세 설명)
 """
 
 import json
@@ -11,7 +17,7 @@ from datetime import datetime
 
 
 # ============================================================
-# 📊 HTML 템플릿 정의 (글래스피치.html - Warm 3D Style)
+# 📊 HTML 템플릿 정의 (글래스피치.html - Warm 3D Style + 누락 기능 복구)
 # ============================================================
 
 HTML_TEMPLATE = """<!DOCTYPE html>
@@ -35,23 +41,30 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         
         :root {
             /* 🎨 Warm Color Palette (Peach, Coral, Gold) */
-            --bg-gradient: linear-gradient(135deg, #FFF6E5 0%, #FFD1BC 100%); /* Cream to Peach */
-            --app-bg: #FFFBF5; /* Warm White */
+            --bg-gradient: linear-gradient(135deg, #FFF6E5 0%, #FFD1BC 100%);
+            --app-bg: #FFFBF5;
             
-            /* Section Gradients (Warm & Vivid) */
-            --gradient-wealth: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%);   /* Sunset Orange */
-            --gradient-career: linear-gradient(135deg, #F6D365 0%, #FDA085 100%);   /* Mango Gold */
-            --gradient-love: linear-gradient(135deg, #EE9CA7 0%, #FFDDE1 100%);     /* Soft Pink */
-            --gradient-change: linear-gradient(135deg, #A18CD1 0%, #FBC2EB 100%);   /* Warm Lavender */
-            --gradient-health: linear-gradient(135deg, #84FAB0 0%, #8FD3F4 100%);   /* Mint (Fresh accent) */
+            /* Section Gradients */
+            --gradient-wealth: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%);
+            --gradient-career: linear-gradient(135deg, #F6D365 0%, #FDA085 100%);
+            --gradient-love: linear-gradient(135deg, #EE9CA7 0%, #FFDDE1 100%);
+            --gradient-change: linear-gradient(135deg, #A18CD1 0%, #FBC2EB 100%);
+            --gradient-health: linear-gradient(135deg, #84FAB0 0%, #8FD3F4 100%);
+            
+            /* 오행 색상 (Five Elements Colors) */
+            --color-wood: #4CAF50;    /* 木 - 녹색 */
+            --color-fire: #F44336;    /* 火 - 빨강 */
+            --color-earth: #FFC107;   /* 土 - 노랑 */
+            --color-metal: #9E9E9E;   /* 金 - 흰색/회색 */
+            --color-water: #2196F3;   /* 水 - 파랑 */
             
             /* Text Colors */
-            --text-dark: #4A3B32; /* Dark Brown (Softer than Black) */
-            --text-gray: #8D7B68; /* Warm Gray */
+            --text-dark: #4A3B32;
+            --text-gray: #8D7B68;
             --text-white: #FFFFFF;
             --accent-orange: #FF7E5F;
             
-            /* Shadows (Warm & Clay) */
+            /* Shadows */
             --shadow-card: 8px 8px 20px rgba(166, 142, 133, 0.15), 
                            -8px -8px 20px rgba(255, 255, 255, 1);
             --shadow-float: 0 20px 50px -12px rgba(255, 126, 95, 0.3);
@@ -61,14 +74,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             /* Layout */
             --app-width: 480px;
             --nav-height: 60px;
-            --radius-lg: 28px; /* 더 둥글게 (Clay 느낌) */
+            --radius-lg: 28px;
             --radius-md: 20px;
         }
 
         /* ==================== Global Layout ==================== */
         body {
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-            background: #FFE8D6; /* Desktop Warm Background */
+            background: #FFE8D6;
             color: var(--text-dark);
             line-height: 1.6;
             display: flex;
@@ -80,26 +93,24 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         .container {
             width: 100%;
             max-width: var(--app-width);
-            background: var(--bg-gradient); /* 전체 배경 그라데이션 */
+            background: var(--bg-gradient);
             min-height: 100vh;
             position: relative;
             box-shadow: 0 0 60px rgba(255, 126, 95, 0.15);
             padding: 0 24px 100px 24px;
-            overflow-x: hidden; /* 가로 스크롤 방지 */
+            overflow-x: hidden;
             z-index: 1;
         }
 
-        /* ==================== 3D Elements (CSS Objects) ==================== */
-        /* 배경에 떠다니는 3D 구체들 */
+        /* ==================== 3D Elements ==================== */
         .shape-3d {
             position: absolute;
             border-radius: 50%;
-            z-index: -1; /* 컨텐츠 뒤로 */
+            z-index: -1;
             filter: blur(2px);
             animation: float 6s ease-in-out infinite;
         }
 
-        /* 1. Big Orange Sphere (Top Right) */
         .shape-1 {
             top: -50px;
             right: -60px;
@@ -109,7 +120,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             box-shadow: 20px 20px 60px rgba(255, 154, 158, 0.4);
         }
 
-        /* 2. Small Gold Sphere (Top Left) */
         .shape-2 {
             top: 120px;
             left: -40px;
@@ -120,7 +130,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             animation-delay: 1s;
         }
 
-        /* 3. Purple Blob (Bottom) */
         .shape-3 {
             bottom: 150px;
             right: -20px;
@@ -137,7 +146,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             100% { transform: translateY(0px) rotate(0deg); }
         }
 
-        /* ==================== Navigation (Warm Glass) ==================== */
+        /* ==================== Navigation ==================== */
         .nav-bar {
             position: fixed;
             bottom: 30px;
@@ -145,12 +154,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             transform: translateX(-50%);
             width: calc(var(--app-width) - 48px);
             max-width: calc(100% - 48px);
-            
-            /* Warm Glassmorphism */
             background: rgba(255, 255, 255, 0.65);
             backdrop-filter: blur(16px) saturate(180%);
             -webkit-backdrop-filter: blur(16px) saturate(180%);
-            
             border-radius: 40px;
             display: flex;
             justify-content: space-between;
@@ -218,7 +224,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             font-size: 2rem;
             line-height: 1.35;
             color: var(--text-dark);
-            text-shadow: 0 2px 0 rgba(255,255,255,0.5); /* 텍스트 입체감 */
+            text-shadow: 0 2px 0 rgba(255,255,255,0.5);
         }
         
         .main-title strong {
@@ -226,7 +232,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             z-index: 1;
         }
         
-        /* 형광펜 효과 (따뜻한 색) */
         .main-title strong::after {
             content: '';
             position: absolute;
@@ -240,7 +245,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         }
 
         /* ==================== Clay Cards ==================== */
-        /* 둥글고 두께감 있는 클레이모피즘 스타일 */
         .card, .detail-box, .key-action-box {
             background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(10px);
@@ -255,7 +259,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         }
 
         .card:active {
-            transform: scale(0.98); /* 눌리는 느낌 */
+            transform: scale(0.98);
         }
 
         .section-title {
@@ -268,15 +272,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             gap: 10px;
         }
         
-        /* 섹션 아이콘도 Warm Color로 변경 */
         .section-title i {
             background: linear-gradient(135deg, #FF9966, #FF5E62);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            font-size: 1.2em; /* 아이콘 살짝 키움 */
+            font-size: 1.2em;
         }
 
-        /* ==================== Saju Grid (사주 명식) ==================== */
+        /* ==================== 컬러풀한 사주명식 (Colorful Saju Grid) ==================== */
         .saju-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -288,6 +291,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             background: #FFFBF5;
             border-radius: 20px;
             padding: 20px 10px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .saju-pillar:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
         
         .saju-label {
@@ -296,18 +305,241 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             margin-bottom: 8px;
         }
         
+        /* 십신 클릭 가능 스타일 */
         .saju-ten-god {
             font-size: 0.85rem;
             color: var(--accent-orange);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: background 0.2s, transform 0.2s;
         }
         
+        .saju-ten-god:hover {
+            background: rgba(255, 126, 95, 0.15);
+            transform: scale(1.05);
+        }
+        
+        .saju-ten-god:active {
+            transform: scale(0.95);
+        }
+        
+        /* 오행별 색상이 적용된 한자 */
         .saju-hanja {
             font-size: 2rem;
             font-weight: 800;
             margin: 10px 0;
+            transition: transform 0.2s;
+        }
+        
+        .saju-hanja:hover {
+            transform: scale(1.1);
+        }
+        
+        /* 오행별 색상 클래스 */
+        .element-wood { color: var(--color-wood); text-shadow: 0 2px 4px rgba(76, 175, 80, 0.3); }
+        .element-fire { color: var(--color-fire); text-shadow: 0 2px 4px rgba(244, 67, 54, 0.3); }
+        .element-earth { color: var(--color-earth); text-shadow: 0 2px 4px rgba(255, 193, 7, 0.3); }
+        .element-metal { color: var(--color-metal); text-shadow: 0 2px 4px rgba(158, 158, 158, 0.3); }
+        .element-water { color: var(--color-water); text-shadow: 0 2px 4px rgba(33, 150, 243, 0.3); }
+
+        /* ==================== 십신 설명 모달 ==================== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 30px;
+            max-width: 350px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transform: scale(0.9);
+            transition: transform 0.3s;
+            text-align: center;
+        }
+        
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent-orange);
+            margin-bottom: 15px;
+        }
+        
+        .modal-body {
+            color: var(--text-gray);
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+        
+        .modal-close {
+            background: var(--gradient-wealth);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .modal-close:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(255, 94, 98, 0.4);
         }
 
-        /* ==================== 2. Summary Grid ==================== */
+        /* ==================== 나의 스탯 변화 (레이더 차트) ==================== */
+        .stat-chart-box {
+            height: 280px;
+            margin: 20px 0;
+            background: #FFFBF5;
+            border-radius: 16px;
+            padding: 15px;
+            position: relative;
+        }
+        
+        .stat-legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+        }
+        
+        .stat-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .stat-legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .stat-legend-dot.current { background: rgba(255, 126, 95, 0.6); }
+        .stat-legend-dot.future { background: rgba(255, 94, 98, 1); }
+
+        /* ==================== 월별 운세 차트 + 월 버튼 ==================== */
+        .flow-chart-box {
+            height: 250px;
+            margin: 20px 0;
+            background: #FFFBF5;
+            border-radius: 16px;
+            padding: 15px;
+        }
+        
+        /* 월별 버튼 그리드 */
+        .month-buttons {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-top: 20px;
+        }
+        
+        .month-btn {
+            padding: 10px 5px;
+            border: 2px solid #F0E6D8;
+            border-radius: 12px;
+            background: #FFFBF5;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-gray);
+            transition: all 0.3s;
+        }
+        
+        .month-btn:hover {
+            border-color: var(--accent-orange);
+            color: var(--accent-orange);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 126, 95, 0.2);
+        }
+        
+        .month-btn.active {
+            background: var(--gradient-wealth);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 8px 20px rgba(255, 94, 98, 0.3);
+        }
+        
+        /* 월별 상세 설명 박스 */
+        .month-detail-box {
+            margin-top: 20px;
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            border: 2px dashed #E0D4C5;
+            display: none;
+        }
+        
+        .month-detail-box.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .month-detail-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .month-detail-content {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .month-detail-item {
+            display: flex;
+            gap: 10px;
+            padding: 12px;
+            background: #FFFBF5;
+            border-radius: 12px;
+        }
+        
+        .month-detail-item .label {
+            font-weight: 700;
+            color: var(--accent-orange);
+            min-width: 60px;
+        }
+        
+        .month-detail-item .value {
+            color: var(--text-gray);
+            flex: 1;
+        }
+
+        /* ==================== Summary Grid ==================== */
         .summary-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -318,7 +550,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             background: #FFF;
             padding: 20px;
             border-radius: var(--radius-md);
-            box-shadow: var(--shadow-inner); /* 눌린 듯한 효과 */
+            box-shadow: var(--shadow-inner);
             border: 1px solid #FFF;
         }
 
@@ -337,7 +569,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             color: var(--text-dark);
         }
 
-        /* Highlighted Summary (Warm Gradient) */
         .summary-box.highlight {
             grid-column: 1 / -1;
             background: var(--gradient-wealth) !important;
@@ -348,7 +579,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             overflow: hidden;
         }
         
-        /* 반짝이는 효과 추가 */
         .summary-box.highlight::after {
             content: '';
             position: absolute;
@@ -361,14 +591,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             transform: rotate(30deg);
         }
 
-        /* ==================== 3. Detail Box ==================== */
+        /* ==================== Detail Box ==================== */
         .detail-box {
             padding: 0;
             overflow: hidden;
             background: #FFF;
         }
 
-        /* 헤더 디자인: 그라데이션 대신 3D 버튼 느낌 */
         .detail-box h3 {
             padding: 24px;
             font-size: 1.3rem;
@@ -382,7 +611,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             border-bottom: 1px solid #F0F0F0;
         }
 
-        /* 3D Icon Container */
         .detail-box h3 span {
             width: 44px;
             height: 44px;
@@ -397,7 +625,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             text-shadow: 0 2px 2px rgba(0,0,0,0.1);
         }
 
-        /* 섹션별 아이콘 배경색 변경 */
         .detail-box.career h3 span { background: var(--gradient-career); box-shadow: 0 8px 16px rgba(253, 160, 133, 0.3); }
         .detail-box.love h3 span { background: var(--gradient-love); box-shadow: 0 8px 16px rgba(255, 221, 225, 0.4); }
         .detail-box.change h3 span { background: var(--gradient-change); box-shadow: 0 8px 16px rgba(161, 140, 209, 0.3); }
@@ -409,7 +636,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
         .detail-content {
             font-size: 1rem;
-            color: #6D5D50; /* Warm Gray Text */
+            color: #6D5D50;
             line-height: 1.8;
         }
 
@@ -418,9 +645,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             padding: 0 4px;
         }
 
-        /* ==================== 4. Premium Inner Box ==================== */
+        /* ==================== Premium Inner Box ==================== */
         .inner-box {
-            background: #FFFBF5; /* 아주 연한 베이지 */
+            background: #FFFBF5;
             border: 2px dashed #E0D4C5;
             border-radius: 16px;
             padding: 20px;
@@ -441,7 +668,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             list-style: none;
         }
         
-        /* 리스트 앞의 컬러 바를 원형 점으로 변경 */
         .inner-box li::before {
             content: '';
             display: inline-block;
@@ -452,7 +678,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             flex-shrink: 0;
         }
 
-        /* ==================== 5. Action & Amulet ==================== */
+        /* ==================== Action & Amulet ==================== */
         .key-action-box {
             background: #FFF;
             border: 2px solid var(--accent-orange);
@@ -462,7 +688,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             color: var(--accent-orange);
         }
 
-        /* 부적 카드 (3D 기울기 효과 강화) */
         .amulet-card {
             background: linear-gradient(135deg, #F6D365 0%, #FDA085 100%);
             border-radius: 24px;
@@ -492,15 +717,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             font-family: 'Gowun Batang', serif;
             font-size: 1.2rem;
             line-height: 1.6;
-        }
-
-        /* ==================== Monthly Flow Chart ==================== */
-        .flow-chart-box {
-            height: 250px;
-            margin: 20px 0;
-            background: #FFFBF5;
-            border-radius: 16px;
-            padding: 15px;
         }
 
         /* ==================== Q&A Section ==================== */
@@ -541,13 +757,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             .summary-grid {
                 grid-template-columns: 1fr;
             }
+            .month-buttons {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
 
     </style>
 </head>
 <body>
 
-    <!-- 3D 배경 요소 (둥둥 떠다니는 구체) -->
+    <!-- 3D 배경 요소 -->
     <div class="container">
         <div class="shape-3d shape-1"></div>
         <div class="shape-3d shape-2"></div>
@@ -559,13 +778,32 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             <h1 class="main-title" id="mainTitle">2026년 {DAY_MASTER}일간 {CUSTOMER_NAME} 님,<br><strong>{MAIN_KEYWORD}</strong></h1>
         </header>
 
-        <!-- ==================== 1. 사주 명식 섹션 ==================== -->
+        <!-- ==================== 1. 사주 명식 섹션 (컬러풀 + 클릭 가능) ==================== -->
         <section id="saju" class="card">
             <h2 class="section-title"><i class="fas fa-meteor"></i> 나의 에너지 (Energy)</h2>
-            <p style="color: var(--text-gray); font-size: 0.9rem; margin-bottom: 15px;">타고난 기질과 흐름을 분석합니다.</p>
+            <p style="color: var(--text-gray); font-size: 0.9rem; margin-bottom: 15px;">타고난 기질과 흐름을 분석합니다. <span style="color: var(--accent-orange);">십신을 클릭하면 설명을 볼 수 있어요!</span></p>
             
             <div class="saju-grid" id="sajuGrid">
                 <!-- JavaScript에서 렌더링 -->
+            </div>
+        </section>
+
+        <!-- ==================== 나의 스탯 변화 (레이더 차트) ==================== -->
+        <section id="stat-chart" class="card">
+            <h2 class="section-title"><i class="fas fa-chart-radar"></i> 나의 스탯 변화</h2>
+            <p style="color: var(--text-gray); font-size: 0.9rem; margin-bottom: 10px;">2026년, 당신의 에너지는 어떻게 변화할까요?</p>
+            <div class="stat-chart-box">
+                <canvas id="radarChart"></canvas>
+            </div>
+            <div class="stat-legend">
+                <div class="stat-legend-item">
+                    <div class="stat-legend-dot current"></div>
+                    <span>현재</span>
+                </div>
+                <div class="stat-legend-item">
+                    <div class="stat-legend-dot future"></div>
+                    <span>2026년</span>
+                </div>
             </div>
         </section>
 
@@ -585,11 +823,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             </div>
         </section>
 
-        <!-- ==================== 월별 운세 차트 ==================== -->
+        <!-- ==================== 월별 운세 차트 + 월별 가이드 ==================== -->
         <section id="monthly-chart" class="card">
             <h2 class="section-title"><i class="fas fa-chart-line"></i> 2026 월별 운세 흐름</h2>
             <div class="flow-chart-box">
                 <canvas id="monthlyFlowChart"></canvas>
+            </div>
+            
+            <!-- 월별 버튼 -->
+            <div class="month-buttons" id="monthButtons">
+                <!-- JavaScript에서 렌더링 -->
+            </div>
+            
+            <!-- 월별 상세 설명 -->
+            <div class="month-detail-box" id="monthDetailBox">
+                <!-- JavaScript에서 렌더링 -->
             </div>
         </section>
 
@@ -627,6 +875,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     </div>
 
+    <!-- ==================== 십신 설명 모달 ==================== -->
+    <div class="modal-overlay" id="sipsinModal">
+        <div class="modal-content">
+            <h3 class="modal-title" id="modalTitle">십신명</h3>
+            <p class="modal-body" id="modalBody">설명이 여기에 표시됩니다.</p>
+            <button class="modal-close" onclick="closeSipsinModal()">확인</button>
+        </div>
+    </div>
+
     <!-- ==================== Navigation Bar (Floating) ==================== -->
     <nav class="nav-bar">
         <a href="#saju" class="nav-item">원국</a>
@@ -643,10 +900,114 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         const REPORT_DATA = {REPORT_DATA_JSON};
 
         // ============================================================
+        // 🎨 오행 -> 색상 매핑
+        // ============================================================
+        const OHENG_MAP = {
+            '甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土', 
+            '己': '土', '庚': '金', '辛': '金', '壬': '水', '癸': '水', 
+            '子': '水', '丑': '土', '寅': '木', '卯': '木', '辰': '土', 
+            '巳': '火', '午': '火', '未': '土', '申': '金', '酉': '金', 
+            '戌': '土', '亥': '水'
+        };
+        
+        const ELEMENT_CLASS_MAP = {
+            '木': 'element-wood',
+            '火': 'element-fire',
+            '土': 'element-earth',
+            '金': 'element-metal',
+            '水': 'element-water'
+        };
+        
+        function getElementClass(char) {
+            const oheng = OHENG_MAP[char];
+            return ELEMENT_CLASS_MAP[oheng] || '';
+        }
+
+        // ============================================================
+        // 🔮 십신 설명 데이터
+        // ============================================================
+        const SIPSIN_DESCRIPTIONS = {
+            '비견': {
+                title: '비견 (比肩)',
+                desc: '나와 같은 오행, 같은 음양입니다. 형제, 친구, 동료를 의미하며 독립심과 자존심이 강합니다. 경쟁심이 있고 자기 주관이 뚜렷합니다.'
+            },
+            '겁재': {
+                title: '겁재 (劫財)',
+                desc: '나와 같은 오행, 다른 음양입니다. 형제, 친구 중 라이벌 관계를 의미합니다. 승부욕이 강하고 재물에 대한 욕심이 있습니다.'
+            },
+            '식신': {
+                title: '식신 (食神)',
+                desc: '내가 생하는 오행, 같은 음양입니다. 먹을 복, 표현력, 창의력을 의미합니다. 여유롭고 낙천적이며 예술적 감각이 있습니다.'
+            },
+            '상관': {
+                title: '상관 (傷官)',
+                desc: '내가 생하는 오행, 다른 음양입니다. 예리한 통찰력과 비판력을 의미합니다. 자유로운 영혼이며 기존 질서에 도전합니다.'
+            },
+            '편재': {
+                title: '편재 (偏財)',
+                desc: '내가 극하는 오행, 같은 음양입니다. 유동적인 재물, 투자, 사업을 의미합니다. 활동적이고 사교적이며 돈의 흐름이 역동적입니다.'
+            },
+            '정재': {
+                title: '정재 (正財)',
+                desc: '내가 극하는 오행, 다른 음양입니다. 안정적인 재물, 월급, 저축을 의미합니다. 성실하고 검소하며 계획적입니다.'
+            },
+            '편관': {
+                title: '편관 (偏官)',
+                desc: '나를 극하는 오행, 같은 음양입니다. 도전, 압박, 스트레스를 의미하지만 이를 이겨내면 큰 성취를 이룹니다. 카리스마가 있습니다.'
+            },
+            '정관': {
+                title: '정관 (正官)',
+                desc: '나를 극하는 오행, 다른 음양입니다. 명예, 직장, 규율을 의미합니다. 책임감이 강하고 조직 내에서 인정받습니다.'
+            },
+            '편인': {
+                title: '편인 (偏印)',
+                desc: '나를 생하는 오행, 같은 음양입니다. 특별한 재능, 학문, 종교, 예술을 의미합니다. 비범한 아이디어와 영감이 있습니다.'
+            },
+            '정인': {
+                title: '정인 (正印)',
+                desc: '나를 생하는 오행, 다른 음양입니다. 어머니, 학문, 자격증을 의미합니다. 배움을 좋아하고 인내심이 강합니다.'
+            },
+            '일원': {
+                title: '일원 (日元)',
+                desc: '본인 자신을 의미합니다. 일간(日干)과 동일한 것으로, 사주팔자의 중심이 되는 나 자신입니다.'
+            }
+        };
+
+        // ============================================================
+        // 🔮 십신 모달 함수
+        // ============================================================
+        function showSipsinModal(sipsin) {
+            const modal = document.getElementById('sipsinModal');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            
+            const info = SIPSIN_DESCRIPTIONS[sipsin] || { title: sipsin, desc: '설명 준비 중입니다.' };
+            
+            title.textContent = info.title;
+            body.textContent = info.desc;
+            
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeSipsinModal() {
+            const modal = document.getElementById('sipsinModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // 모달 바깥 클릭 시 닫기
+        document.getElementById('sipsinModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSipsinModal();
+            }
+        });
+
+        // ============================================================
         // 🎨 렌더링 함수들
         // ============================================================
         
-        // 사주 명식 렌더링
+        // 컬러풀한 사주 명식 렌더링 (십신 클릭 가능)
         function renderSaju() {
             const container = document.getElementById('sajuGrid');
             if (!container || !REPORT_DATA.saju) return;
@@ -658,18 +1019,92 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             let html = '';
             pillars.forEach((pillar, idx) => {
                 const tenGod = tenGods[idx] || {};
+                const stemClass = getElementClass(pillar.stem);
+                const branchClass = getElementClass(pillar.branch);
+                
+                const stemTenGod = tenGod.stem_ten_god || '';
+                const branchTenGod = tenGod.branch_ten_god || '';
+                
                 html += `
                     <div class="saju-pillar">
                         <p class="saju-label">${labels[idx]}</p>
-                        <p class="saju-ten-god">${tenGod.stem_ten_god || ''}</p>
-                        <p class="saju-hanja">${pillar.stem || ''}</p>
-                        <p class="saju-hanja">${pillar.branch || ''}</p>
-                        <p class="saju-ten-god">${tenGod.branch_ten_god || ''}</p>
+                        <p class="saju-ten-god" onclick="showSipsinModal('${stemTenGod}')" title="클릭하여 설명 보기">${stemTenGod}</p>
+                        <p class="saju-hanja ${stemClass}">${pillar.stem || ''}</p>
+                        <p class="saju-hanja ${branchClass}">${pillar.branch || ''}</p>
+                        <p class="saju-ten-god" onclick="showSipsinModal('${branchTenGod}')" title="클릭하여 설명 보기">${branchTenGod}</p>
                     </div>
                 `;
             });
             
             container.innerHTML = html;
+        }
+
+        // 레이더 차트 렌더링 (나의 스탯 변화)
+        function renderRadarChart() {
+            const ctx = document.getElementById('radarChart');
+            if (!ctx) return;
+            
+            // REPORT_DATA에서 radar_chart 데이터 가져오기
+            const radarData = REPORT_DATA.radar_chart || {
+                labels: ['추진력', '수익화', '협상력', '안정성', '리더십'],
+                current: [7, 6, 5, 7, 6],
+                future: [8, 8, 7, 7, 8]
+            };
+            
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: radarData.labels,
+                    datasets: [
+                        {
+                            label: '현재',
+                            data: radarData.current,
+                            borderColor: 'rgba(255, 126, 95, 0.6)',
+                            backgroundColor: 'rgba(255, 126, 95, 0.15)',
+                            borderWidth: 2,
+                            pointBackgroundColor: 'rgba(255, 126, 95, 0.8)',
+                            pointRadius: 4
+                        },
+                        {
+                            label: '2026년',
+                            data: radarData.future,
+                            borderColor: 'rgba(255, 94, 98, 1)',
+                            backgroundColor: 'rgba(255, 94, 98, 0.25)',
+                            borderWidth: 3,
+                            pointBackgroundColor: 'rgba(255, 94, 98, 1)',
+                            pointRadius: 5
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 10,
+                            min: 0,
+                            ticks: {
+                                stepSize: 2,
+                                display: false
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 12,
+                                    weight: '600'
+                                },
+                                color: '#8D7B68'
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         // 핵심 요약 렌더링
@@ -806,6 +1241,64 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             });
         }
 
+        // 월별 버튼 및 상세 설명 렌더링
+        function renderMonthlyGuide() {
+            const buttonsContainer = document.getElementById('monthButtons');
+            const detailBox = document.getElementById('monthDetailBox');
+            
+            if (!buttonsContainer || !detailBox) return;
+            
+            const monthlyGuide = REPORT_DATA.monthly_guide || {};
+            
+            // 월 버튼 생성
+            let buttonsHtml = '';
+            for (let i = 1; i <= 12; i++) {
+                buttonsHtml += `<button class="month-btn" data-month="${i}">${i}월</button>`;
+            }
+            buttonsContainer.innerHTML = buttonsHtml;
+            
+            // 버튼 클릭 이벤트
+            const buttons = buttonsContainer.querySelectorAll('.month-btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const month = this.dataset.month;
+                    
+                    // 활성 버튼 토글
+                    buttons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // 상세 내용 표시
+                    showMonthDetail(month, monthlyGuide);
+                });
+            });
+        }
+        
+        function showMonthDetail(month, monthlyGuide) {
+            const detailBox = document.getElementById('monthDetailBox');
+            const data = monthlyGuide[month] || monthlyGuide[String(month)] || {};
+            
+            if (!data || Object.keys(data).length === 0) {
+                detailBox.innerHTML = `
+                    <div class="month-detail-title">📅 ${month}월 가이드</div>
+                    <p style="color: var(--text-gray);">이 달의 상세 정보가 아직 준비되지 않았습니다.</p>
+                `;
+            } else {
+                detailBox.innerHTML = `
+                    <div class="month-detail-title">📅 ${month}월: ${data.title || '월별 가이드'}</div>
+                    <div class="month-detail-content">
+                        ${data.wealth ? `<div class="month-detail-item"><span class="label">💰 재물</span><span class="value">${data.wealth}</span></div>` : ''}
+                        ${data.career ? `<div class="month-detail-item"><span class="label">💼 직업</span><span class="value">${data.career}</span></div>` : ''}
+                        ${data.love ? `<div class="month-detail-item"><span class="label">❤️ 애정</span><span class="value">${data.love}</span></div>` : ''}
+                        ${data.focus ? `<div class="month-detail-item"><span class="label">🎯 집중</span><span class="value">${data.focus}</span></div>` : ''}
+                        ${data.caution ? `<div class="month-detail-item"><span class="label">⚠️ 주의</span><span class="value">${data.caution}</span></div>` : ''}
+                        ${data.action ? `<div class="month-detail-item"><span class="label">✨ 행동</span><span class="value">${data.action}</span></div>` : ''}
+                    </div>
+                `;
+            }
+            
+            detailBox.classList.add('active');
+        }
+
         // Q&A 섹션 렌더링
         function renderQA() {
             const container = document.getElementById('qaContent');
@@ -858,9 +1351,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
             renderSaju();
+            renderRadarChart();
             renderSummary();
             renderDetails();
             renderMonthlyChart();
+            renderMonthlyGuide();
             renderQA();
             renderActions();
             
@@ -1016,6 +1511,16 @@ def _extract_report_data(data: Dict) -> Dict:
     # 월별 운세 데이터
     monthly_flow = analysis.get('monthly_flow', [70, 75, 80, 65, 85, 50, 60, 70, 95, 80, 75, 70])
     
+    # 월별 가이드 데이터 (NEW - 월 클릭 시 상세 설명)
+    monthly_guide = analysis.get('monthly_guide', {})
+    
+    # 레이더 차트 데이터 (NEW - 나의 스탯 변화)
+    radar_chart = analysis.get('radar_chart', {
+        'labels': ['추진력', '수익화', '협상력', '안정성', '리더십'],
+        'current': [7, 6, 5, 7, 6],
+        'future': [8, 8, 7, 7, 8]
+    })
+    
     # 개운법 데이터
     actions = analysis.get('key_actions', [])
     
@@ -1034,6 +1539,8 @@ def _extract_report_data(data: Dict) -> Dict:
         },
         'details': details,
         'monthly_flow': monthly_flow,
+        'monthly_guide': monthly_guide,  # NEW
+        'radar_chart': radar_chart,      # NEW
         'qa': qa_section,
         'actions': actions
     }
@@ -1046,10 +1553,11 @@ def _extract_report_data(data: Dict) -> Dict:
 def generate_free_report_html(data: Dict) -> str:
     """
     무료 기본 HTML 리포트 생성 (5개 기본 섹션만)
-    - 사주 명식
+    - 사주 명식 (컬러풀 + 십신 클릭 설명)
+    - 나의 스탯 변화 (레이더 차트)
     - 핵심 요약
     - 상세 분석
-    - 월별 운세
+    - 월별 운세 (그래프 + 월 클릭 상세 설명)
     - 개운법
     
     Args:
@@ -1224,20 +1732,41 @@ if __name__ == "__main__":
                 'action_item': '수익 모델 구조화 및 브랜드 IP 확보'
             },
             'detailed_analysis': {
-                'wealth_luck': '<strong>"지출은 곧 투자입니다."</strong><br>현재 재물운은 명예(火)로 인해 지출을 동반합니다. 돈을 벌기보다 명예와 기반을 다지는 투자에 집중하는 것이 실속을 챙기는 길입니다.',
-                'career_luck': '냉철한 분석력과 판단력이 빛을 발하는 시기입니다. 조직 내 갈등이나 압박이 예상되니, <strong>꼼꼼한 문서 처리</strong>가 생명입니다.',
-                'love_family_luck': '리더십이 과하면 독선이 됩니다. 가정에서는 "결과"가 아닌 "과정"을 존중하는 부드러움을 보여주세요.',
-                'change_luck': '사업장 확장이나 이사 운이 강합니다. 모든 계약 과정에서 전문가의 조언을 반드시 구하세요.',
-                'health_advice': '강한 관살(火)로 인한 스트레스 주의보. 심혈관 및 호흡기를 체크하세요.<br><br>운동은 선택이 아니라 생존을 위한 필수 루틴입니다.'
+                'wealth_luck': '<strong>"지출은 곧 투자입니다."</strong><br>현재 재물운은 명예(火)로 인해 지출을 동반합니다.',
+                'career_luck': '냉철한 분석력과 판단력이 빛을 발하는 시기입니다.',
+                'love_family_luck': '리더십이 과하면 독선이 됩니다.',
+                'change_luck': '사업장 확장이나 이사 운이 강합니다.',
+                'health_advice': '강한 관살(火)로 인한 스트레스 주의보.'
             },
             'qa_section': {
                 'q1': '2026년에 사업 확장을 해도 될까요?',
-                'a1': '현재 대운과 세운을 분석한 결과, 2026년은 기반을 다지는 시기입니다. 과도한 확장보다는 내실을 다지는 것이 좋습니다.',
+                'a1': '현재 대운과 세운을 분석한 결과, 2026년은 기반을 다지는 시기입니다.',
                 'q2': '재물운이 가장 좋은 월은 언제인가요?',
-                'a2': '9월, 11월, 12월이 재물운이 상승하는 시기입니다. 특히 9월에는 적극적인 투자를 고려해보세요.'
+                'a2': '9월, 11월, 12월이 재물운이 상승하는 시기입니다.'
             },
             'final_message': '논리적인 시스템만이 당신의 추진력을 완성합니다.',
             'monthly_flow': [70, 75, 80, 65, 85, 50, 60, 70, 95, 80, 75, 70],
+            # NEW: 레이더 차트 데이터
+            'radar_chart': {
+                'labels': ['추진력', '수익화', '협상력', '안정성', '리더십'],
+                'current': [8, 5, 6, 7, 7],
+                'future': [7, 8, 9, 7, 8]
+            },
+            # NEW: 월별 가이드 데이터
+            'monthly_guide': {
+                '1': {'title': '새로운 시작', 'wealth': '안정적 흐름', 'career': '계획 수립에 집중', 'love': '소통 강화', 'focus': '목표 설정', 'caution': '과욕 금물', 'action': '연간 계획 작성'},
+                '2': {'title': '준비의 시간', 'wealth': '지출 관리', 'career': '역량 강화', 'love': '가족 시간', 'focus': '자기계발', 'caution': '건강 주의', 'action': '건강검진'},
+                '3': {'title': '도전의 시기', 'wealth': '투자 검토', 'career': '새 기회 탐색', 'love': '관계 확장', 'focus': '네트워킹', 'caution': '급한 결정', 'action': '인맥 관리'},
+                '4': {'title': '성장의 계절', 'wealth': '수입 증가 예상', 'career': '승진/이직 기회', 'love': '로맨스 운 상승', 'focus': '실행력', 'caution': '체력 관리', 'action': '프로젝트 착수'},
+                '5': {'title': '열정의 시기', 'wealth': '재물운 최고조', 'career': '리더십 발휘', 'love': '깊은 유대감', 'focus': '집중력', 'caution': '과로 주의', 'action': '중요 결정'},
+                '6': {'title': '조정의 시간', 'wealth': '지출 증가', 'career': '방향 재검토', 'love': '갈등 조심', 'focus': '균형', 'caution': '감정 조절', 'action': '휴식 확보'},
+                '7': {'title': '재충전', 'wealth': '보합세', 'career': '학습 기회', 'love': '여행 추천', 'focus': '재정비', 'caution': '무리한 계획', 'action': '휴가 계획'},
+                '8': {'title': '반등의 시작', 'wealth': '회복세', 'career': '새 프로젝트', 'love': '만남 운', 'focus': '도전정신', 'caution': '급진적 변화', 'action': '새 시작 준비'},
+                '9': {'title': '수확의 시기', 'wealth': '최고 재물운', 'career': '성과 인정', 'love': '결실 운', 'focus': '마무리', 'caution': '자만심', 'action': '감사 표현'},
+                '10': {'title': '정리의 시간', 'wealth': '안정세 유지', 'career': '평가 시기', 'love': '깊은 대화', 'focus': '성찰', 'caution': '비교 금물', 'action': '피드백 수용'},
+                '11': {'title': '도약 준비', 'wealth': '저축 권장', 'career': '내년 계획', 'love': '가족 행사', 'focus': '계획 수립', 'caution': '건강 관리', 'action': '건강검진'},
+                '12': {'title': '마무리와 감사', 'wealth': '지출 조절', 'career': '성과 정리', 'love': '감사 전달', 'focus': '회고', 'caution': '과음 주의', 'action': '새해 목표'}
+            },
             'key_actions': [
                 '분산된 아이디어를 <strong>"수익화 파이프라인"</strong> 하나로 모으는 데 80%의 시간을 쓰세요.',
                 '단기 수익보다 브랜딩, IP 확보에 필요한 <strong>"실속 지출"</strong>만 허용하세요.',
@@ -1264,7 +1793,7 @@ if __name__ == "__main__":
             },
             'relationship_strategy': {
                 'pattern_name': '과도한 희생 금지',
-                'boundary_guide': '당신의 에너지가 먼저 채워져야 남도 도울 수 있습니다. 건강한 이기주의가 필요합니다.'
+                'boundary_guide': '당신의 에너지가 먼저 채워져야 남도 도울 수 있습니다.'
             },
             'rest_calendar': {
                 'burnout_months': [4, 8, 12],
