@@ -322,7 +322,36 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             transform: scale(0.95);
         }
         
-        /* 오행별 색상이 적용된 한자 */
+        /* 한글 독음 + 한자 조합 스타일 */
+        .char-with-hanja {
+            display: inline-block;
+            position: relative;
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 8px 2px;
+            transition: transform 0.2s;
+        }
+        
+        .char-with-hanja:hover {
+            transform: scale(1.1);
+        }
+        
+        .char-with-hanja .korean {
+            display: block;
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+        
+        .char-with-hanja .hanja-sub {
+            position: absolute;
+            bottom: -2px;
+            right: -8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            opacity: 0.7;
+        }
+        
+        /* 기존 호환성 유지 */
         .saju-hanja {
             font-size: 2rem;
             font-weight: 800;
@@ -872,12 +901,62 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             border: none;
             border-radius: var(--radius-lg) !important; 
             box-shadow: 0 20px 50px rgba(74, 59, 50, 0.4);
+            padding: 40px 30px !important;  /* 양옆 여백 추가 */
         }
         
         .final-message-card p {
             font-family: 'Gowun Batang', serif;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            padding: 0 15px;  /* 텍스트 추가 여백 */
+        }
+
+        /* ==================== Footer Links ==================== */
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 30px;
+            padding: 0 10px;
+        }
+        
+        .footer-link-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 16px 24px;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .footer-link-btn.primary {
+            background: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%);
+            color: white;
+            box-shadow: 0 8px 20px rgba(255, 94, 98, 0.3);
+        }
+        
+        .footer-link-btn.primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(255, 94, 98, 0.4);
+        }
+        
+        .footer-link-btn.secondary {
+            background: linear-gradient(135deg, #833AB4 0%, #E1306C 50%, #F77737 100%);
+            color: white;
+            box-shadow: 0 8px 20px rgba(225, 48, 108, 0.3);
+        }
+        
+        .footer-link-btn.secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(225, 48, 108, 0.4);
+        }
+        
+        .footer-link-btn i {
             font-size: 1.2rem;
-            line-height: 1.6;
         }
 
         /* ==================== Q&A Section ==================== */
@@ -1049,9 +1128,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <!-- ==================== 최종 메시지 ==================== -->
         <section class="final-message-card" id="finalMessage">
             <p id="finalMessageText">
-                <br>{FINAL_MESSAGE}<br><br>
-                <strong style="color:#FFD1BC;">{KEY_MESSAGE_2026}</strong><br><br>
+                {FINAL_MESSAGE}<br><br>
+                <strong style="color:#FFD1BC;">{KEY_MESSAGE_2026}</strong>
             </p>
+        </section>
+        
+        <!-- ==================== 하단 링크 섹션 ==================== -->
+        <section class="footer-links">
+            <a href="https://litt.ly/hiddenlucky" target="_blank" class="footer-link-btn primary">
+                <i class="fas fa-comments"></i> 1:1 깊은 상담 요청하기
+            </a>
+            <a href="https://www.instagram.com/hiddenluck_lab" target="_blank" class="footer-link-btn secondary">
+                <i class="fab fa-instagram"></i> 희구소 인스타그램
+            </a>
         </section>
         
         <!-- 하단 여백 확보 -->
@@ -1102,9 +1191,25 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             '水': 'element-water'
         };
         
+        // 한자 -> 한글 독음 매핑
+        const HANJA_TO_KOREAN = {
+            '甲': '갑', '乙': '을', '丙': '병', '丁': '정', '戊': '무',
+            '己': '기', '庚': '경', '辛': '신', '壬': '임', '癸': '계',
+            '子': '자', '丑': '축', '寅': '인', '卯': '묘', '辰': '진',
+            '巳': '사', '午': '오', '未': '미', '申': '신', '酉': '유',
+            '戌': '술', '亥': '해'
+        };
+        
         function getElementClass(char) {
             const oheng = OHENG_MAP[char];
             return ELEMENT_CLASS_MAP[oheng] || '';
+        }
+        
+        // 한자를 한글 독음 + 오른쪽 아래 한자로 변환
+        function renderCharWithHanja(hanja) {
+            const korean = HANJA_TO_KOREAN[hanja] || hanja;
+            const elementClass = getElementClass(hanja);
+            return `<span class="char-with-hanja ${elementClass}"><span class="korean">${korean}</span><span class="hanja-sub ${elementClass}">${hanja}</span></span>`;
         }
 
         // ============================================================
@@ -1207,12 +1312,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 const stemClass = getElementClass(d.ganji[0]);
                 const branchClass = getElementClass(d.ganji[1]);
                 
+                // 한글 독음 가져오기
+                const stemKorean = HANJA_TO_KOREAN[d.ganji[0]] || d.ganji[0];
+                const branchKorean = HANJA_TO_KOREAN[d.ganji[1]] || d.ganji[1];
+                
                 html += `
                     <div class="daewoon-item ${isCurrent ? 'current' : ''}">
                         <div class="age">${d.age}세</div>
                         <div class="sipsin">${sipsinInfo.stem || ''}</div>
                         <div class="ganji">
-                            <span class="${stemClass}">${d.ganji[0] || ''}</span><span class="${branchClass}">${d.ganji[1] || ''}</span>
+                            <span class="${stemClass}" style="position:relative;">${stemKorean}<sub style="font-size:0.5em; opacity:0.7;">${d.ganji[0]}</sub></span><span class="${branchClass}" style="position:relative;">${branchKorean}<sub style="font-size:0.5em; opacity:0.7;">${d.ganji[1]}</sub></span>
                         </div>
                         <div class="ganji-sub">${sipsinInfo.branch || ''}</div>
                     </div>
@@ -1251,17 +1360,22 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             // 진행률 계산 (대운 10년 기준)
             const yearsInDw = currAge - currentDw.age;
             const progressPercent = Math.min(Math.max((yearsInDw / 10) * 100, 0), 100);
-            const endYear = currentDwStartYear + 10 - yearsInDw;
+            // 대운 종료 연도 = 시작 연도 + 10년 (수정됨: 시작연도 기준으로 10년 후)
+            const endYear = currentDwStartYear + 10;
             
             const stemClass = getElementClass(currentDw.ganji[0]);
             const branchClass = getElementClass(currentDw.ganji[1]);
             
+            // 한글 독음 가져오기
+            const stemKorean = HANJA_TO_KOREAN[currentDw.ganji[0]] || currentDw.ganji[0];
+            const branchKorean = HANJA_TO_KOREAN[currentDw.ganji[1]] || currentDw.ganji[1];
+            
             container.innerHTML = `
                 <p style="text-align:center; margin-bottom:15px; color:var(--text-gray); font-size:0.95rem;">
-                    <span class="${stemClass}" style="font-size:1.1rem; font-weight:700;">${currentDw.ganji[0] || ''}</span><span class="${branchClass}" style="font-size:1.1rem; font-weight:700;">${currentDw.ganji[1] || ''}</span> 대운이 ${currentDw.age}세(${currentDwStartYear}년)부터 진행 중입니다.
+                    <span class="${stemClass}" style="font-size:1.1rem; font-weight:700;">${stemKorean}<sub style="font-size:0.6em; opacity:0.7;">${currentDw.ganji[0]}</sub></span><span class="${branchClass}" style="font-size:1.1rem; font-weight:700;">${branchKorean}<sub style="font-size:0.6em; opacity:0.7;">${currentDw.ganji[1]}</sub></span> 대운이 ${currentDw.age}세(${currentDwStartYear}년)부터 진행 중입니다.
                 </p>
                 <div class="daewoon-progress-header">
-                    <span class="daewoon-progress-title"><span class="${stemClass}">${currentDw.ganji[0] || ''}</span><span class="${branchClass}">${currentDw.ganji[1] || ''}</span> 대운 (${currentDw.age}세~)</span>
+                    <span class="daewoon-progress-title"><span class="${stemClass}">${stemKorean}<sub style="font-size:0.6em;">${currentDw.ganji[0]}</sub></span><span class="${branchClass}">${branchKorean}<sub style="font-size:0.6em;">${currentDw.ganji[1]}</sub></span> 대운 (${currentDw.age}세~)</span>
                     <span class="daewoon-progress-link">인생의 여정</span>
                 </div>
                 <div class="daewoon-progress-bar">
@@ -1304,12 +1418,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 const stemClass = getElementClass(ganji[0]);
                 const branchClass = getElementClass(ganji[1]);
                 
+                // 한글 독음 가져오기
+                const stemKorean = HANJA_TO_KOREAN[ganji[0]] || ganji[0];
+                const branchKorean = HANJA_TO_KOREAN[ganji[1]] || ganji[1];
+                
                 html += `
                     <div class="sewoon-item ${isCurrentYear ? 'current-year' : ''}">
                         <div class="year">${year}</div>
                         <div class="sipsin">${sipsin.stem || ''}</div>
                         <div class="ganji">
-                            <span class="${isCurrentYear ? '' : stemClass}">${ganji[0] || ''}</span><span class="${isCurrentYear ? '' : branchClass}">${ganji[1] || ''}</span>
+                            <span class="${isCurrentYear ? '' : stemClass}">${stemKorean}<sub style="font-size:0.6em; opacity:0.7;">${ganji[0]}</sub></span><span class="${isCurrentYear ? '' : branchClass}">${branchKorean}<sub style="font-size:0.6em; opacity:0.7;">${ganji[1]}</sub></span>
                         </div>
                         <div class="ganji-sipsin">${sipsin.branch || ''}</div>
                     </div>
@@ -1341,8 +1459,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     <div class="saju-pillar">
                         <p class="saju-label">${labels[idx]}</p>
                         <p class="saju-ten-god" onclick="showSipsinModal('${stemTenGod}')" title="클릭하여 설명 보기">${stemTenGod}</p>
-                        <p class="saju-hanja ${stemClass}">${pillar.stem || ''}</p>
-                        <p class="saju-hanja ${branchClass}">${pillar.branch || ''}</p>
+                        <div>${renderCharWithHanja(pillar.stem)}</div>
+                        <div>${renderCharWithHanja(pillar.branch)}</div>
                         <p class="saju-ten-god" onclick="showSipsinModal('${branchTenGod}')" title="클릭하여 설명 보기">${branchTenGod}</p>
                     </div>
                 `;
