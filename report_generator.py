@@ -1106,7 +1106,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
         <!-- ==================== Q&A 섹션 ==================== -->
         <section id="qa" class="card no-click">
-            <h2 class="section-title"><i class="fas fa-question-circle"></i> 자주 묻는 질문</h2>
+            <h2 class="section-title"><i class="fas fa-question-circle"></i> <span id="qaTitleName">{CUSTOMER_NAME}</span>님이 궁금한 질문</h2>
             <div id="qaContent">
                 <!-- JavaScript에서 렌더링 -->
             </div>
@@ -1360,8 +1360,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             // 진행률 계산 (대운 10년 기준)
             const yearsInDw = currAge - currentDw.age;
             const progressPercent = Math.min(Math.max((yearsInDw / 10) * 100, 0), 100);
-            // 대운 종료 연도 = 시작 연도 + 10년 (수정됨: 시작연도 기준으로 10년 후)
-            const endYear = currentDwStartYear + 10;
+            // 대운 종료 연도 = 시작 연도 + 9 (10년 기간: 2017~2026 = 10년)
+            const endYear = currentDwStartYear + 9;
             
             const stemClass = getElementClass(currentDw.ganji[0]);
             const branchClass = getElementClass(currentDw.ganji[1]);
@@ -1437,7 +1437,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             container.innerHTML = html;
         }
         
-        // 컬러풀한 사주 명식 렌더링 (십신 클릭 가능)
+        // 컬러풀한 사주 명식 렌더링 (십신 클릭 가능) - 시일월년 순서
         function renderSaju() {
             const container = document.getElementById('sajuGrid');
             if (!container || !REPORT_DATA.saju) return;
@@ -1446,9 +1446,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             const tenGods = REPORT_DATA.saju.ten_gods || [];
             const labels = ['년주', '월주', '일주', '시주'];
             
+            // 순서 반전: 년월일시 → 시일월년
+            const reversedPillars = [...pillars].reverse();
+            const reversedTenGods = [...tenGods].reverse();
+            const reversedLabels = [...labels].reverse();
+            
             let html = '';
-            pillars.forEach((pillar, idx) => {
-                const tenGod = tenGods[idx] || {};
+            reversedPillars.forEach((pillar, idx) => {
+                const tenGod = reversedTenGods[idx] || {};
                 const stemClass = getElementClass(pillar.stem);
                 const branchClass = getElementClass(pillar.branch);
                 
@@ -1457,7 +1462,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 
                 html += `
                     <div class="saju-pillar">
-                        <p class="saju-label">${labels[idx]}</p>
+                        <p class="saju-label">${reversedLabels[idx]}</p>
                         <p class="saju-ten-god" onclick="showSipsinModal('${stemTenGod}')" title="클릭하여 설명 보기">${stemTenGod}</p>
                         <div>${renderCharWithHanja(pillar.stem)}</div>
                         <div>${renderCharWithHanja(pillar.branch)}</div>
@@ -1487,7 +1492,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     labels: radarData.labels,
                     datasets: [
                         {
-                            label: '현재',
+                            label: '타고난 기질',
                             data: radarData.current,
                             borderColor: 'rgba(255, 126, 95, 0.6)',
                             backgroundColor: 'rgba(255, 126, 95, 0.15)',
@@ -1554,11 +1559,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     <p style="color: #FF9966;">${summary.risk || '정보 없음'}</p>
                 </div>
                 <div class="summary-box highlight">
-                    <div style="display:flex; flex-direction:column; align-items:flex-start; position:relative; z-index:2;">
+                    <div style="display:flex; flex-direction:column; align-items:flex-start; position:relative; z-index:2; width:100%;">
                         <p style="opacity:0.9; font-weight:400; color:white;">🚀 행동 지침</p>
                         <p style="font-size:1.1rem; color:white;">${summary.action_item || '정보 없음'}</p>
                     </div>
-                    <i class="fas fa-arrow-right" style="position:relative; z-index:2; color:white; font-size:1.2rem;"></i>
                 </div>
             `;
             
@@ -1729,7 +1733,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             detailBox.classList.add('active');
         }
 
-        // Q&A 섹션 렌더링
+        // Q&A 섹션 렌더링 - "XX님이 궁금한 질문" 형식
         function renderQA() {
             const container = document.getElementById('qaContent');
             if (!container || !REPORT_DATA.qa) return;
@@ -1740,7 +1744,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             if (qa.q1 && qa.a1) {
                 html += `
                     <div class="qa-item">
-                        <p class="qa-question"><i class="fas fa-question"></i> ${qa.q1}</p>
+                        <p class="qa-question"><strong style="color:#FF5E62;">Q1.</strong> ${qa.q1}</p>
                         <p class="qa-answer">${qa.a1}</p>
                     </div>
                 `;
@@ -1749,7 +1753,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             if (qa.q2 && qa.a2) {
                 html += `
                     <div class="qa-item">
-                        <p class="qa-question"><i class="fas fa-question"></i> ${qa.q2}</p>
+                        <p class="qa-question"><strong style="color:#FF5E62;">Q2.</strong> ${qa.q2}</p>
                         <p class="qa-answer">${qa.a2}</p>
                     </div>
                 `;
