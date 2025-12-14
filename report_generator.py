@@ -258,9 +258,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .card:active {
-            transform: scale(0.98);
-        }
+        /* 카드 클릭 시 움직임 제거됨 */
 
         .section-title {
             font-size: 1.5rem;
@@ -449,6 +447,169 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             background: #FFFBF5;
             border-radius: 16px;
             padding: 15px;
+        }
+
+        /* ==================== 대운/세운 섹션 스타일 ==================== */
+        .daewoon-timeline {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding: 10px 0;
+            margin-bottom: 20px;
+            scrollbar-width: thin;
+        }
+        
+        .daewoon-item {
+            flex-shrink: 0;
+            text-align: center;
+            padding: 12px 16px;
+            background: #FFFBF5;
+            border-radius: 16px;
+            border: 2px solid #F0E6D8;
+            transition: all 0.3s;
+            min-width: 70px;
+        }
+        
+        .daewoon-item.current {
+            background: linear-gradient(135deg, #B8E0D2 0%, #D6EAF8 100%);
+            border-color: #5DADE2;
+            box-shadow: 0 4px 15px rgba(93, 173, 226, 0.3);
+        }
+        
+        .daewoon-item .age {
+            font-size: 0.75rem;
+            color: var(--text-gray);
+            margin-bottom: 5px;
+        }
+        
+        .daewoon-item .sipsin {
+            font-size: 0.7rem;
+            color: var(--accent-orange);
+            margin-bottom: 3px;
+        }
+        
+        .daewoon-item .ganji {
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+        
+        .daewoon-item .ganji-sub {
+            font-size: 0.7rem;
+            color: var(--text-gray);
+            margin-top: 3px;
+        }
+        
+        /* 대운 진행률 */
+        .daewoon-progress-section {
+            background: #FFFBF5;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #F0E6D8;
+        }
+        
+        .daewoon-progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .daewoon-progress-title {
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 1rem;
+        }
+        
+        .daewoon-progress-link {
+            font-size: 0.85rem;
+            color: var(--accent-orange);
+            text-decoration: none;
+        }
+        
+        .daewoon-progress-bar {
+            background: #E0D4C5;
+            height: 10px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        
+        .daewoon-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #B8E0D2 0%, #5DADE2 100%);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .daewoon-progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-gray);
+        }
+        
+        /* 세운 섹션 */
+        .sewoon-section {
+            margin-top: 20px;
+        }
+        
+        .sewoon-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent-orange);
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .sewoon-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+        
+        .sewoon-item {
+            text-align: center;
+            padding: 10px 5px;
+            background: #FFF;
+            border-radius: 12px;
+            border: 1px solid #F0E6D8;
+            transition: all 0.3s;
+        }
+        
+        .sewoon-item.current-year {
+            background: linear-gradient(135deg, #FFD1BC 0%, #FF9966 100%);
+            border-color: var(--accent-orange);
+            box-shadow: 0 4px 12px rgba(255, 126, 95, 0.3);
+        }
+        
+        .sewoon-item.current-year .year,
+        .sewoon-item.current-year .ganji,
+        .sewoon-item.current-year .sipsin {
+            color: white;
+        }
+        
+        .sewoon-item .year {
+            font-size: 0.75rem;
+            color: var(--text-gray);
+            margin-bottom: 3px;
+        }
+        
+        .sewoon-item .sipsin {
+            font-size: 0.65rem;
+            color: var(--accent-orange);
+            margin-bottom: 2px;
+        }
+        
+        .sewoon-item .ganji {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+        
+        .sewoon-item .ganji-sipsin {
+            font-size: 0.6rem;
+            color: var(--text-gray);
+            margin-top: 2px;
         }
         
         /* 월별 버튼 그리드 */
@@ -779,7 +940,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </header>
 
         <!-- ==================== 1. 사주 명식 섹션 (컬러풀 + 클릭 가능) ==================== -->
-        <section id="saju" class="card">
+        <section id="saju" class="card no-click">
             <h2 class="section-title"><i class="fas fa-meteor"></i> 나의 에너지 (Energy)</h2>
             <p style="color: var(--text-gray); font-size: 0.9rem; margin-bottom: 15px;">타고난 기질과 흐름을 분석합니다. <span style="color: var(--accent-orange);">십신을 클릭하면 설명을 볼 수 있어요!</span></p>
             
@@ -788,8 +949,31 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             </div>
         </section>
 
+        <!-- ==================== 인생의 흐름 (대운/세운) ==================== -->
+        <section id="life-path" class="card no-click">
+            <h2 class="section-title"><i class="fas fa-route"></i> 인생의 흐름 (Life Path)</h2>
+            
+            <!-- 대운 타임라인 -->
+            <div class="daewoon-timeline" id="daewoonTimeline">
+                <!-- JavaScript에서 렌더링 -->
+            </div>
+            
+            <!-- 현재 대운 진행률 -->
+            <div class="daewoon-progress-section" id="daewoonProgress">
+                <!-- JavaScript에서 렌더링 -->
+            </div>
+            
+            <!-- 현재 대운의 세운 흐름 -->
+            <div class="sewoon-section">
+                <h3 class="sewoon-title" id="sewoonTitle">현재 대운의 세운 흐름</h3>
+                <div class="sewoon-grid" id="sewoonGrid">
+                    <!-- JavaScript에서 렌더링 -->
+                </div>
+            </div>
+        </section>
+
         <!-- ==================== 나의 스탯 변화 (레이더 차트) ==================== -->
-        <section id="stat-chart" class="card">
+        <section id="stat-chart" class="card no-click">
             <h2 class="section-title"><i class="fas fa-chart-radar"></i> 나의 스탯 변화</h2>
             <p style="color: var(--text-gray); font-size: 0.9rem; margin-bottom: 10px;">2026년, 당신의 에너지는 어떻게 변화할까요?</p>
             <div class="stat-chart-box">
@@ -824,7 +1008,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </section>
 
         <!-- ==================== 월별 운세 차트 + 월별 가이드 ==================== -->
-        <section id="monthly-chart" class="card">
+        <section id="monthly-chart" class="card no-click">
             <h2 class="section-title"><i class="fas fa-chart-line"></i> 2026 월별 운세 흐름</h2>
             <div class="flow-chart-box">
                 <canvas id="monthlyFlowChart"></canvas>
@@ -842,7 +1026,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </section>
 
         <!-- ==================== Q&A 섹션 ==================== -->
-        <section id="qa" class="card">
+        <section id="qa" class="card no-click">
             <h2 class="section-title"><i class="fas fa-question-circle"></i> 자주 묻는 질문</h2>
             <div id="qaContent">
                 <!-- JavaScript에서 렌더링 -->
@@ -866,7 +1050,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <section class="final-message-card" id="finalMessage">
             <p id="finalMessageText">
                 <br>{FINAL_MESSAGE}<br><br>
-                <strong style="color:#FFD1BC;">오직 실속과 결과에 집중하세요.</strong><br><br>
+                <strong style="color:#FFD1BC;">{KEY_MESSAGE_2026}</strong><br><br>
             </p>
         </section>
         
@@ -1006,6 +1190,134 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         // ============================================================
         // 🎨 렌더링 함수들
         // ============================================================
+        
+        // 대운 타임라인 렌더링
+        function renderDaewoonTimeline() {
+            const container = document.getElementById('daewoonTimeline');
+            if (!container || !REPORT_DATA.saju) return;
+            
+            const daewoonList = REPORT_DATA.saju.daewoon_list || [];
+            const currAge = REPORT_DATA.saju.curr_age || 0;
+            const daewoonSipsin = REPORT_DATA.saju.daewoon_sipsin || {};
+            
+            let html = '';
+            daewoonList.forEach(d => {
+                const isCurrent = currAge >= d.age && currAge < d.age + 10;
+                const sipsinInfo = daewoonSipsin[d.ganji] || {stem: '', branch: ''};
+                const stemClass = getElementClass(d.ganji[0]);
+                const branchClass = getElementClass(d.ganji[1]);
+                
+                html += `
+                    <div class="daewoon-item ${isCurrent ? 'current' : ''}">
+                        <div class="age">${d.age}세</div>
+                        <div class="sipsin">${sipsinInfo.stem || ''}</div>
+                        <div class="ganji">
+                            <span class="${stemClass}">${d.ganji[0] || ''}</span><span class="${branchClass}">${d.ganji[1] || ''}</span>
+                        </div>
+                        <div class="ganji-sub">${sipsinInfo.branch || ''}</div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            
+            // 현재 대운으로 스크롤
+            const currentItem = container.querySelector('.daewoon-item.current');
+            if (currentItem) {
+                setTimeout(() => {
+                    currentItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }, 100);
+            }
+        }
+        
+        // 대운 진행률 렌더링
+        function renderDaewoonProgress() {
+            const container = document.getElementById('daewoonProgress');
+            if (!container || !REPORT_DATA.saju) return;
+            
+            const daewoonList = REPORT_DATA.saju.daewoon_list || [];
+            const currAge = REPORT_DATA.saju.curr_age || 0;
+            const currentDwStartYear = REPORT_DATA.saju.current_dw_start_year || new Date().getFullYear();
+            
+            // 현재 대운 찾기
+            let currentDw = daewoonList[0] || { age: 0, ganji: '--' };
+            for (const d of daewoonList) {
+                if (currAge >= d.age && currAge < d.age + 10) {
+                    currentDw = d;
+                    break;
+                }
+            }
+            
+            // 진행률 계산 (대운 10년 기준)
+            const yearsInDw = currAge - currentDw.age;
+            const progressPercent = Math.min(Math.max((yearsInDw / 10) * 100, 0), 100);
+            const endYear = currentDwStartYear + 10 - yearsInDw;
+            
+            const stemClass = getElementClass(currentDw.ganji[0]);
+            const branchClass = getElementClass(currentDw.ganji[1]);
+            
+            container.innerHTML = `
+                <p style="text-align:center; margin-bottom:15px; color:var(--text-gray); font-size:0.95rem;">
+                    <span class="${stemClass}" style="font-size:1.1rem; font-weight:700;">${currentDw.ganji[0] || ''}</span><span class="${branchClass}" style="font-size:1.1rem; font-weight:700;">${currentDw.ganji[1] || ''}</span> 대운이 ${currentDw.age}세(${currentDwStartYear}년)부터 진행 중입니다.
+                </p>
+                <div class="daewoon-progress-header">
+                    <span class="daewoon-progress-title"><span class="${stemClass}">${currentDw.ganji[0] || ''}</span><span class="${branchClass}">${currentDw.ganji[1] || ''}</span> 대운 (${currentDw.age}세~)</span>
+                    <span class="daewoon-progress-link">인생의 여정</span>
+                </div>
+                <div class="daewoon-progress-bar">
+                    <div class="daewoon-progress-fill" style="width: ${progressPercent}%"></div>
+                </div>
+                <div class="daewoon-progress-info">
+                    <span>${currentDwStartYear}년</span>
+                    <span>${Math.round(progressPercent)}% 진행</span>
+                    <span>${endYear}년 종료</span>
+                </div>
+            `;
+        }
+        
+        // 세운 그리드 렌더링
+        function renderSewoonGrid() {
+            const container = document.getElementById('sewoonGrid');
+            const titleEl = document.getElementById('sewoonTitle');
+            if (!container || !REPORT_DATA.saju) return;
+            
+            const sewoonGanji = REPORT_DATA.saju.sewoon_ganji || {};
+            const sewoonSipsin = REPORT_DATA.saju.sewoon_sipsin_map || {};
+            const currentDwStartYear = REPORT_DATA.saju.current_dw_start_year || new Date().getFullYear();
+            const currentYear = new Date().getFullYear();
+            
+            // 세운 연도 범위
+            const years = Object.keys(sewoonGanji).map(Number).sort((a, b) => a - b);
+            const startYear = years[0] || currentDwStartYear;
+            const endYear = years[years.length - 1] || startYear + 9;
+            
+            // 제목 업데이트
+            if (titleEl) {
+                titleEl.textContent = `현재 대운의 세운 흐름 (${startYear}~${endYear})`;
+            }
+            
+            let html = '';
+            years.forEach(year => {
+                const ganji = sewoonGanji[year] || '--';
+                const sipsin = sewoonSipsin[year] || { stem: '', branch: '' };
+                const isCurrentYear = year === 2026; // 2026년 강조
+                const stemClass = getElementClass(ganji[0]);
+                const branchClass = getElementClass(ganji[1]);
+                
+                html += `
+                    <div class="sewoon-item ${isCurrentYear ? 'current-year' : ''}">
+                        <div class="year">${year}</div>
+                        <div class="sipsin">${sipsin.stem || ''}</div>
+                        <div class="ganji">
+                            <span class="${isCurrentYear ? '' : stemClass}">${ganji[0] || ''}</span><span class="${isCurrentYear ? '' : branchClass}">${ganji[1] || ''}</span>
+                        </div>
+                        <div class="ganji-sipsin">${sipsin.branch || ''}</div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
         
         // 컬러풀한 사주 명식 렌더링 (십신 클릭 가능)
         function renderSaju() {
@@ -1351,6 +1663,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
             renderSaju();
+            renderDaewoonTimeline();
+            renderDaewoonProgress();
+            renderSewoonGrid();
             renderRadarChart();
             renderSummary();
             renderDetails();
@@ -1395,14 +1710,15 @@ PREMIUM_SECTIONS_TEMPLATE = """
                 </div>
             </div>
 
-            <!-- 비겁 부족 보완 미션 -->
-            <div class="detail-box premium-section" id="weakness-missions">
-                <h3><span>🌳</span> {MISSING_ELEMENT} 부족 보완</h3>
+            <!-- 2026년 맞춤 개운법 (원국+세운 분석 기반) -->
+            <div class="detail-box premium-section" id="personal-luck-boost">
+                <h3><span>🌟</span> 2026년 {CUSTOMER_NAME}님만의 개운법</h3>
                 <div class="detail-content-wrapper">
                     <div class="inner-box">
-                        <p style="margin-bottom:10px; font-weight:600;">결핍 요소: {MISSING_ELEMENT_DESC}</p>
+                        <p style="margin-bottom:15px; font-weight:600; color:var(--accent-orange);">{LUCK_BOOST_TITLE}</p>
+                        <p style="margin-bottom:10px; color:var(--text-gray); line-height:1.7;">{LUCK_BOOST_DESC}</p>
                         <ul>
-                            {MONTHLY_MISSIONS}
+                            {LUCK_BOOST_ACTIONS}
                         </ul>
                     </div>
                 </div>
@@ -1524,12 +1840,27 @@ def _extract_report_data(data: Dict) -> Dict:
     # 개운법 데이터
     actions = analysis.get('key_actions', [])
     
+    # 대운/세운 데이터 (NEW - 인생의 흐름 섹션용)
+    daewoon_list = manse.get('daewoon_list', [])
+    curr_age = manse.get('curr_age', 0)
+    current_dw_start_year = manse.get('current_dw_start_year', datetime.now().year)
+    daewoon_sipsin = manse.get('daewoon_sipsin', {})
+    sewoon_ganji = manse.get('sewoon_ganji', {})
+    sewoon_sipsin_map = manse.get('sewoon_sipsin_map', {})
+    
     return {
         'saju': {
             'pillars': pillars,
             'ten_gods': ten_gods,
             'day_master': manse.get('day_master', ''),
-            'customer_name': manse.get('customer_name', '고객')
+            'customer_name': manse.get('customer_name', '고객'),
+            # 대운/세운 데이터 추가
+            'daewoon_list': daewoon_list,
+            'curr_age': curr_age,
+            'current_dw_start_year': current_dw_start_year,
+            'daewoon_sipsin': daewoon_sipsin,
+            'sewoon_ganji': sewoon_ganji,
+            'sewoon_sipsin_map': sewoon_sipsin_map
         },
         'summary': {
             'keyword': summary_card.get('keyword', ''),
@@ -1577,6 +1908,9 @@ def generate_free_report_html(data: Dict) -> str:
     main_keyword = summary_card.get('keyword', '당신의 2026년')
     final_message = analysis.get('final_message', '논리적인 시스템만이 당신의 추진력을 완성합니다.')
     
+    # 2026년 핵심 한 문장 (AI가 생성한 key_message 또는 기본값)
+    key_message_2026 = analysis.get('key_message_2026', summary_card.get('action_item', '2026년, 당신의 운명이 펼쳐집니다.'))
+    
     # 3. JavaScript용 데이터 추출 및 JSON 변환
     report_data = _extract_report_data(data)
     report_data_json = json.dumps(report_data, ensure_ascii=False, indent=2)
@@ -1589,6 +1923,7 @@ def generate_free_report_html(data: Dict) -> str:
     html = html.replace('{CUSTOMER_NAME}', customer_name)
     html = html.replace('{MAIN_KEYWORD}', main_keyword)
     html = html.replace('{FINAL_MESSAGE}', final_message)
+    html = html.replace('{KEY_MESSAGE_2026}', key_message_2026)
     
     # JavaScript 데이터 주입
     html = html.replace('{REPORT_DATA_JSON}', report_data_json)
@@ -1660,11 +1995,23 @@ def generate_premium_report_html(data: Dict) -> str:
     premium_html = premium_html.replace('{OPPORTUNITY_MONTHS}', opportunity_months)
     premium_html = premium_html.replace('{WEALTH_STRATEGY}', wealth_timing.get('strategy', '프리미엄 분석 데이터를 생성 중입니다.'))
     
-    # 비겁 부족 보완
-    missing_element = weakness.get('missing_element', '비겁')
-    premium_html = premium_html.replace('{MISSING_ELEMENT}', missing_element)
-    premium_html = premium_html.replace('{MISSING_ELEMENT_DESC}', f'{missing_element} (창의력과 유연성)')
-    premium_html = premium_html.replace('{MONTHLY_MISSIONS}', monthly_missions)
+    # 2026년 맞춤 개운법 (원국+세운 분석 기반)
+    manse = data.get('manse', {})
+    customer_name = manse.get('customer_name', '고객')
+    luck_boost = analysis.get('luck_boost_2026', {})
+    
+    luck_boost_title = luck_boost.get('title', '올해 당신에게 필요한 에너지를 채우세요')
+    luck_boost_desc = luck_boost.get('description', '2026년 병오(丙午)년의 火 에너지와 당신의 원국을 분석한 맞춤 개운법입니다.')
+    luck_boost_actions_list = luck_boost.get('actions', [])
+    if luck_boost_actions_list:
+        luck_boost_actions = ''.join([f'<li>{action}</li>' for action in luck_boost_actions_list])
+    else:
+        luck_boost_actions = monthly_missions  # 폴백: 기존 monthly_missions 사용
+    
+    premium_html = premium_html.replace('{CUSTOMER_NAME}', customer_name)
+    premium_html = premium_html.replace('{LUCK_BOOST_TITLE}', luck_boost_title)
+    premium_html = premium_html.replace('{LUCK_BOOST_DESC}', luck_boost_desc)
+    premium_html = premium_html.replace('{LUCK_BOOST_ACTIONS}', luck_boost_actions)
     
     # 심리 해소
     premium_html = premium_html.replace('{GUILT_PATTERN}', psychological.get('guilt_pattern', '패턴 분석 중'))
