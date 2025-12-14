@@ -18,8 +18,15 @@ try:
         O_HAENG_MAP,
         TEN_GAN_PERSONA
     )
-except ImportError:
-    print("🚨 오류: saju_data.py 파일이 없거나 상수가 누락되었습니다.")
+    # 🔧 saju_data_updated.py에서 점수 계산 함수 임포트
+    from saju_data_updated import (
+        calculate_total_luck_score,
+        JOHU_SCORES_LOOKUP,
+        JIJI_SCORES_LOOKUP,
+        SINJEONG_JOHU_SCORES_LOOKUP
+    )
+except ImportError as e:
+    print(f"🚨 오류: saju_data.py 또는 saju_data_updated.py 파일이 없거나 상수가 누락되었습니다: {e}")
     raise
 
 # --------------------------------------------------------------------------
@@ -38,6 +45,74 @@ def load_clinical_data(file_path: str = "saju-study-data-all.txt") -> str:
         return "🚨 임상 데이터 파일 (saju-study-data-all.txt)을 찾을 수 없습니다. 분석의 깊이가 제한됩니다."
     except Exception as e:
         return f"🚨 임상 데이터 로드 중 오류 발생: {e}"
+
+
+# --------------------------------------------------------------------------
+# 2-0. 월별 운세 점수 계산 함수 (테이블 기반 - NEW)
+# --------------------------------------------------------------------------
+# 2026년 월별 간지 (병오년 기준)
+MONTHLY_GANJI_2026 = {
+    1: ('庚', '寅'),   # 경인월
+    2: ('辛', '卯'),   # 신묘월
+    3: ('壬', '辰'),   # 임진월
+    4: ('癸', '巳'),   # 계사월
+    5: ('甲', '午'),   # 갑오월
+    6: ('乙', '未'),   # 을미월
+    7: ('丙', '申'),   # 병신월
+    8: ('丁', '酉'),   # 정유월
+    9: ('戊', '戌'),   # 무술월
+    10: ('己', '亥'),  # 기해월
+    11: ('庚', '子'),  # 경자월
+    12: ('辛', '丑'),  # 신축월
+}
+
+def calculate_monthly_flow_scores(manse_info: Dict) -> List[int]:
+    """
+    사주 데이터와 saju_data_updated.py의 테이블을 사용하여 
+    2026년 월별 운세 점수를 계산합니다.
+    
+    동일한 사주에 대해 항상 동일한 점수를 반환합니다.
+    
+    Parameters:
+        manse_info: 사주 명식 정보 (일간, 월지, 일지 포함)
+    
+    Returns:
+        List[int]: 1월~12월 점수 (각 0~100 범위)
+    """
+    ilgan = manse_info.get('일주', ['', ''])[0]  # 일간 (천간)
+    wolji = manse_info.get('월주', ['', ''])[1]  # 월지 (지지)
+    ilji = manse_info.get('일주', ['', ''])[1]   # 일지 (지지)
+    
+    if not ilgan or not wolji or not ilji:
+        # 데이터 없으면 기본값 반환
+        return [65, 70, 75, 60, 80, 55, 65, 70, 85, 75, 70, 65]
+    
+    scores = []
+    is_sin_or_jeong = ilgan in ['辛', '丁']
+    
+    for month in range(1, 13):
+        month_cheongan, month_jiji = MONTHLY_GANJI_2026[month]
+        
+        # saju_data_updated.py의 calculate_total_luck_score 사용
+        sa_ju_data = {
+            '일간': ilgan,
+            '월지': wolji,
+            '일지': ilji
+        }
+        luck_data = {
+            '천간': month_cheongan,
+            '지지': month_jiji,
+            '운의종류': '월운'
+        }
+        
+        result = calculate_total_luck_score(sa_ju_data, luck_data)
+        total_score = result.get('total', 60)
+        
+        # 점수를 정수로 변환 (35~95 범위로 조정)
+        adjusted_score = int(min(95, max(35, total_score)))
+        scores.append(adjusted_score)
+    
+    return scores
 
 
 # --------------------------------------------------------------------------
@@ -611,6 +686,10 @@ def analyze_ai_report(manse_info: Dict, daewoon_info: Dict, full_q: str, profile
         
         try:
             result_json = json.loads(clean_json_str)
+            
+            # 🔧 월별 점수를 테이블 기반으로 덮어쓰기 (AI 생성 점수 대체)
+            # 이로써 동일한 사주에 대해 항상 동일한 월별 점수가 반환됨
+            result_json['monthly_flow'] = calculate_monthly_flow_scores(manse_info)
             
             # 프리미엄 섹션 기본값 보장
             result_json = ensure_premium_sections(result_json, ilgan, manse_info)
