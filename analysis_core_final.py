@@ -115,6 +115,34 @@ def calculate_monthly_flow_scores(manse_info: Dict) -> List[int]:
     return scores
 
 
+def _format_monthly_scores_for_prompt(monthly_scores: List[int]) -> str:
+    """
+    월별 점수를 AI 프롬프트용 문자열로 포맷팅합니다.
+    """
+    if not monthly_scores or len(monthly_scores) != 12:
+        return "[월별 점수 데이터 없음]"
+    
+    def get_grade(score: int) -> str:
+        if score >= 80:
+            return "★★★ 매우좋음"
+        elif score >= 70:
+            return "★★☆ 좋음"
+        elif score >= 55:
+            return "★☆☆ 보통"
+        elif score >= 45:
+            return "☆☆☆ 주의"
+        else:
+            return "⚠️ 신중"
+    
+    lines = []
+    for i, score in enumerate(monthly_scores):
+        month = i + 1
+        grade = get_grade(score)
+        lines.append(f"  {month}월: {score}점 ({grade})")
+    
+    return "\n".join(lines)
+
+
 # --------------------------------------------------------------------------
 # 2-1. 명리학 패턴 JSON 로드 함수 (NEW)
 # --------------------------------------------------------------------------
@@ -486,7 +514,7 @@ def get_system_instruction() -> str:
 """
 
 
-def get_final_ai_prompt(ilgan: str, saju_data: Dict, daewoon_info: Dict, sewoon_info: Dict, q: str, events: str, clinical_data_str: str, pattern_analysis_str: str = "", profile_data: Dict = None) -> str:
+def get_final_ai_prompt(ilgan: str, saju_data: Dict, daewoon_info: Dict, sewoon_info: Dict, q: str, events: str, clinical_data_str: str, pattern_analysis_str: str = "", profile_data: Dict = None, monthly_scores: List[int] = None) -> str:
     """
     최종 통합된 AI 분석 요청 프롬프트를 생성합니다.
     
@@ -506,6 +534,7 @@ def get_final_ai_prompt(ilgan: str, saju_data: Dict, daewoon_info: Dict, sewoon_
         clinical_data_str: 임상 데이터 문자열
         pattern_analysis_str: 발동된 특수 패턴 분석 문자열 (NEW)
         profile_data: 고객 프로필 정보 (직업, 결혼 상태, 자녀 유무) (NEW)
+        monthly_scores: 테이블 기반 월별 점수 리스트 [1월~12월] (NEW)
     """
     # (TEN_GAN_PERSONA는 saju_data.py에서 가져온다고 가정)
     persona = TEN_GAN_PERSONA.get(ilgan, {"style": "따뜻함", "instruction": "공감"}) 
@@ -600,6 +629,15 @@ def get_final_ai_prompt(ilgan: str, saju_data: Dict, daewoon_info: Dict, sewoon_
 [발동된 특수 패턴 분석 (자형/충/형/신살)]
 {pattern_analysis_str if pattern_analysis_str else '[발동된 특수 패턴 없음]'}
 
+[🔴 중요: 2026년 월별 운세 점수 (테이블 기반 - 반드시 참조)]
+{_format_monthly_scores_for_prompt(monthly_scores)}
+
+⚠️ **monthly_guide 작성 시 반드시 위 점수를 참고하세요!**
+- 점수 70점 이상: 긍정적 테마 ("기회의 달", "성취의 달", "도약의 달" 등)
+- 점수 50~69점: 중립적 테마 ("준비의 달", "점검의 달", "안정의 달" 등)  
+- 점수 50점 미만: 주의 테마 ("신중의 달", "충전의 달", "절제의 달" 등)
+- 그래프 점수와 텍스트 설명이 **반드시 일치**해야 합니다!
+
 [AI 참고용 임상 통계 자료 - 절대 출력 금지, 내부 참조용]
 ---START OF REFERENCE DATA---
 {clinical_data_str[:10000]}  # 길이 제한
@@ -649,8 +687,11 @@ def analyze_ai_report(manse_info: Dict, daewoon_info: Dict, full_q: str, profile
     # 2. [NEW] 명리학 특수 패턴 분석
     matched_patterns = find_patterns_in_chart(manse_info)
     pattern_analysis_str = format_patterns_for_prompt(matched_patterns)
+    
+    # 3. [NEW] 테이블 기반 월별 점수 계산 (AI에게 전달하여 일관된 가이드 작성 유도)
+    monthly_scores = calculate_monthly_flow_scores(manse_info)
 
-    # 3. 최종 프롬프트 생성 (get_final_ai_prompt는 이미 정의되어 있음)
+    # 4. 최종 프롬프트 생성 (get_final_ai_prompt는 이미 정의되어 있음)
     prompt = get_final_ai_prompt(
         ilgan=ilgan, 
         saju_data=manse_info, 
@@ -660,7 +701,8 @@ def analyze_ai_report(manse_info: Dict, daewoon_info: Dict, full_q: str, profile
         events=events, 
         clinical_data_str=clinical_data_str,
         pattern_analysis_str=pattern_analysis_str,  # NEW: 패턴 분석 결과 추가
-        profile_data=profile_data  # NEW: 고객 프로필 데이터 추가
+        profile_data=profile_data,  # NEW: 고객 프로필 데이터 추가
+        monthly_scores=monthly_scores  # NEW: 테이블 기반 월별 점수 전달
     )
     
     # 4. AI API 호출 및 응답 처리
