@@ -9,6 +9,9 @@ import re
 # 🚨 1. [필수] TIME_ZONE 상수 정의 추가 (SajuEngine 밖에서 사용됨)
 TIME_ZONE = datetime.timezone(datetime.timedelta(hours=9)) 
 
+# 🔧 2026년 리포트 생성용 상수 (현재 시스템 날짜 대신 사용)
+TARGET_YEAR = 2026 
+
 # --- [1. 사주 데이터 상수 임포트 (saju_data.py 파일 필수)] ---
 try:
     from saju_data import (
@@ -682,7 +685,8 @@ def analyze_ai_report(manse_info: Dict, daewoon_info: Dict, full_q: str, profile
     # 1. AI 프롬프트 생성에 필요한 데이터 준비
     ilgan = manse_info['일주'][0]
     clinical_data_str = load_clinical_data()
-    sewoon_info = engine_instance.get_sewoon(datetime.datetime.now().year, 1) # 현재 연도 세운 1년치
+    # 🔧 수정: datetime.now().year 대신 TARGET_YEAR(2026) 사용
+    sewoon_info = engine_instance.get_sewoon(TARGET_YEAR, 1)  # 2026년 세운
     
     # 2. [NEW] 명리학 특수 패턴 분석
     matched_patterns = find_patterns_in_chart(manse_info)

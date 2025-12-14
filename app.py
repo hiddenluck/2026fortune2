@@ -6,6 +6,9 @@ from typing import Dict, List
 import google.generativeai as genai 
 from math import floor # floor 함수를 명시적으로 임포트
 
+# 🔧 2026년 리포트 생성용 상수 (현재 시스템 날짜 대신 사용)
+TARGET_YEAR = 2026
+
 # --------------------------------------------------------------------------
 # [TIER IMPORT] 모듈화된 파일에서 핵심 로직을 가져옵니다.
 # --------------------------------------------------------------------------
@@ -183,7 +186,8 @@ def render_daewoon_sewoon(dw: Dict, manse_info: Dict, curr_age: int):
     
     current_dw_start_age = [d['age'] for d in dw['대운_간지_배열'] if curr_age >= d['age'] and curr_age < d['age'] + 10]
     dw_start_age = current_dw_start_age[0] if current_dw_start_age else dw['대운_간지_배열'][0]['age']
-    current_dw_start_year = datetime.now().year - (curr_age - dw_start_age)
+    # 🔧 수정: datetime.now().year 대신 TARGET_YEAR 사용
+    current_dw_start_year = TARGET_YEAR - (curr_age - dw_start_age)
             
     engine = SajuEngine()
     sewoon_list = engine.get_sewoon(current_dw_start_year, 10)
@@ -194,7 +198,8 @@ def render_daewoon_sewoon(dw: Dict, manse_info: Dict, curr_age: int):
         year_ganji = sw['ganji']
         sewoon_sipsin = calculate_sewoon_sipsin(day_master, year_ganji)
 
-        is_current_year = year == datetime.now().year
+        # 🔧 수정: datetime.now().year 대신 TARGET_YEAR 사용
+        is_current_year = year == TARGET_YEAR
         year_style = "color:#D32F2F; font-weight:bold;" if is_current_year else "color:#555;"
         
         with sewoon_cols[i]:
@@ -361,11 +366,11 @@ def render_app():
                 
                 dw_list_for_html = [{ "age": d['age'], "ganji": d['ganji'] } for d in daewoon_info['대운_간지_배열']]
                 
-                # 현재 대운 시작 연도 계산 (HTML 렌더링에 필요)
-                current_dw_start_year = datetime.now().year - (curr_age - dw_list_for_html[0]['age'])
+                # 🔧 수정: 현재 대운 시작 연도 계산 - TARGET_YEAR(2026) 기준
+                current_dw_start_year = TARGET_YEAR - (curr_age - dw_list_for_html[0]['age'])
                 for d in dw_list_for_html:
                     if curr_age >= d['age'] and curr_age < d['age'] + 10:
-                        current_dw_start_year = datetime.now().year - (curr_age - d['age'])
+                        current_dw_start_year = TARGET_YEAR - (curr_age - d['age'])
                         break
                 
                 # 세운 10년치 정보 생성 (HTML 템플릿에 주입)
