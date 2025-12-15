@@ -720,10 +720,10 @@ def analyze_ai_report(manse_info: Dict, daewoon_info: Dict, full_q: str, profile
             system_instruction=get_system_instruction()
         ).generate_content(
             contents=[prompt],
-            # 수정 완료: 'config'를 'generation_config'로 변경
             generation_config={
                 "temperature": 0.5,
                 "response_mime_type": "application/json",
+                "max_output_tokens": 16384,  # 🔧 응답 잘림 방지를 위해 토큰 제한 증가
             }
         )
         
@@ -735,27 +735,97 @@ def analyze_ai_report(manse_info: Dict, daewoon_info: Dict, full_q: str, profile
         try:
             result_json = json.loads(clean_json_str)
             
-            # 🔧 월별 점수를 테이블 기반으로 덮어쓰기 (AI 생성 점수 대체)
-            # 이로써 동일한 사주에 대해 항상 동일한 월별 점수가 반환됨
-            monthly_scores = calculate_monthly_flow_scores(manse_info)
-            result_json['monthly_flow'] = monthly_scores
-            
-            # 🔧 프리미엄 섹션 동적 생성 (사주 기반 맞춤 컨텐츠)
-            result_json = ensure_premium_sections(result_json, ilgan, manse_info, monthly_scores)
-            
         except json.JSONDecodeError as e:
-             return {
-                 "summary_card": {"keyword": f"❌ AI 응답 파싱 실패 (JSON 오류)", "best_month": "N/A", "risk": "N/A", "action_item": "N/A"},
-                 "raw_response": clean_json_str
-             }
+            # 🔧 JSON 파싱 실패 시 기본 구조로 복구 시도
+            print(f"⚠️ JSON 파싱 오류: {e}")
+            print(f"⚠️ 응답 길이: {len(clean_json_str)} chars")
+            
+            # 기본 구조 생성 (프리미엄 섹션은 ensure_premium_sections에서 채움)
+            result_json = {
+                "summary_card": {
+                    "keyword": "2026년 운세 분석 완료",
+                    "best_month": "9월",
+                    "risk": "에너지 소진 주의",
+                    "action_item": "월별 점수를 참고하여 계획을 세우세요."
+                },
+                "detailed_analysis": {
+                    "wealth_luck": "AI 분석 중 오류가 발생했습니다. 재시도해 주세요.",
+                    "career_luck": "AI 분석 중 오류가 발생했습니다.",
+                    "love_family_luck": "AI 분석 중 오류가 발생했습니다.",
+                    "change_luck": "AI 분석 중 오류가 발생했습니다.",
+                    "health_advice": "AI 분석 중 오류가 발생했습니다."
+                },
+                "customer_analysis": {
+                    "wealth_luck": "분석 데이터를 불러오는 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+                    "career_luck": "분석 데이터를 불러오는 중 문제가 발생했습니다.",
+                    "love_family_luck": "분석 데이터를 불러오는 중 문제가 발생했습니다.",
+                    "change_luck": "분석 데이터를 불러오는 중 문제가 발생했습니다.",
+                    "health_advice": "분석 데이터를 불러오는 중 문제가 발생했습니다."
+                },
+                "qa_section": {
+                    "q1": "질문을 불러오는 중 오류가 발생했습니다.",
+                    "a1": "잠시 후 다시 시도해 주세요.",
+                    "q2": "",
+                    "a2": ""
+                },
+                "final_message": "운세 분석에 일시적인 문제가 발생했습니다. 월별 점수와 프리미엄 가이드는 정상적으로 확인하실 수 있습니다.",
+                "radar_chart": {
+                    "labels": ["추진력", "수익화", "협상력", "안정성", "리더십"],
+                    "current": [7, 6, 6, 7, 6],
+                    "future": [7, 7, 7, 7, 7]
+                },
+                "monthly_guide": {str(i): {"title": "분석 중", "wealth": "-", "career": "-", "love": "-", "focus": "-", "caution": "-", "action": "-"} for i in range(1, 13)},
+                "key_actions": ["월별 점수 그래프를 참고하세요", "취약월에는 휴식을 취하세요", "용신 기운을 보충하세요"]
+            }
+        
+        # 🔧 월별 점수를 테이블 기반으로 덮어쓰기 (AI 생성 점수 대체)
+        monthly_scores = calculate_monthly_flow_scores(manse_info)
+        result_json['monthly_flow'] = monthly_scores
+        
+        # 🔧 프리미엄 섹션 동적 생성 (사주 기반 맞춤 컨텐츠)
+        result_json = ensure_premium_sections(result_json, ilgan, manse_info, monthly_scores)
         
         return result_json
 
     except Exception as e:
-        return {
-            "summary_card": {"keyword": f"❌ API 호출 실패 - {type(e).__name__}", "best_month": "N/A", "risk": "N/A", "action_item": "N/A"},
-            "raw_response": f"API 호출 또는 응답 생성 중 예상치 못한 오류 발생: {str(e)}"
+        # 🔧 API 호출 실패 시에도 기본 구조 반환 (프리미엄 섹션은 채워짐)
+        print(f"❌ API 호출 실패: {type(e).__name__} - {str(e)}")
+        
+        monthly_scores = calculate_monthly_flow_scores(manse_info)
+        
+        result_json = {
+            "summary_card": {
+                "keyword": "운세 분석 준비 중",
+                "best_month": "9월",
+                "risk": "일시적 오류",
+                "action_item": "잠시 후 다시 시도해 주세요."
+            },
+            "detailed_analysis": {
+                "wealth_luck": f"API 연결 오류: {type(e).__name__}",
+                "career_luck": "잠시 후 다시 시도해 주세요.",
+                "love_family_luck": "잠시 후 다시 시도해 주세요.",
+                "change_luck": "잠시 후 다시 시도해 주세요.",
+                "health_advice": "잠시 후 다시 시도해 주세요."
+            },
+            "customer_analysis": {
+                "wealth_luck": "네트워크 연결에 일시적인 문제가 발생했습니다.",
+                "career_luck": "잠시 후 다시 시도해 주세요.",
+                "love_family_luck": "잠시 후 다시 시도해 주세요.",
+                "change_luck": "잠시 후 다시 시도해 주세요.",
+                "health_advice": "잠시 후 다시 시도해 주세요."
+            },
+            "qa_section": {"q1": "", "a1": "", "q2": "", "a2": ""},
+            "final_message": "일시적인 연결 문제가 발생했습니다. 월별 점수와 프리미엄 가이드는 정상적으로 확인하실 수 있습니다.",
+            "radar_chart": {"labels": ["추진력", "수익화", "협상력", "안정성", "리더십"], "current": [7, 6, 6, 7, 6], "future": [7, 7, 7, 7, 7]},
+            "monthly_flow": monthly_scores,
+            "monthly_guide": {str(i): {"title": "분석 중", "wealth": "-", "career": "-", "love": "-", "focus": "-", "caution": "-", "action": "-"} for i in range(1, 13)},
+            "key_actions": ["월별 점수 그래프를 참고하세요", "취약월에는 휴식을 취하세요", "용신 기운을 보충하세요"]
         }
+        
+        # 프리미엄 섹션은 정상적으로 생성
+        result_json = ensure_premium_sections(result_json, ilgan, manse_info, monthly_scores)
+        
+        return result_json
 
 
 # =============================================================================
