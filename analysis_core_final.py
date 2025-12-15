@@ -1115,9 +1115,12 @@ def _get_rest_activities_by_yongsin(yongsin: str) -> str:
 
 def ensure_premium_sections(result_json: Dict, ilgan: str, manse_info: Dict, monthly_scores: List[int] = None) -> Dict:
     """
-    🔧 프리미엄 섹션을 사주 데이터 기반으로 동적 생성합니다.
+    🔧 프리미엄 섹션을 사주 데이터 기반으로 **항상** 동적 생성합니다.
     
-    [개선된 로직]:
+    ⚠️ 중요: AI 응답에 있는 프리미엄 섹션 데이터를 무시하고, 
+    항상 사주 분석 기반으로 새로 계산합니다. (고정값 문제 해결)
+    
+    [로직]:
     1. 개운법(weakness_missions): 원국 오행 분포 분석 → 부족/과다 오행 판단 → 보완 미션 생성
     2. 마인드셋업(psychological_relief): 십성 분포 → 성격 패턴 → 심리적 취약점 대응 문구
     3. 관계가이드(relationship_strategy): 십성 패턴 → 관계 스타일 가이드
@@ -1129,6 +1132,11 @@ def ensure_premium_sections(result_json: Dict, ilgan: str, manse_info: Dict, mon
     oheng_analysis = _analyze_oheng_distribution(manse_info)
     yongsin = _calculate_yongsin(manse_info)
     sipsin_pattern = _get_sipsin_pattern(manse_info)
+    
+    # 디버그 출력
+    print(f"🔧 [Premium] 일간: {ilgan}, 용신: {yongsin}")
+    print(f"🔧 [Premium] 오행분포: {oheng_analysis['count']}, 부족: {oheng_analysis['missing']}, 약함: {oheng_analysis['weak']}")
+    print(f"🔧 [Premium] 십성패턴: {sipsin_pattern['pattern_name']} ({sipsin_pattern['dominant']})")
     
     # 용신 색상 매핑
     yongsin_color_map = {
@@ -1150,117 +1158,112 @@ def ensure_premium_sections(result_json: Dict, ilgan: str, manse_info: Dict, mon
             # 최소 점수 달 3개
             sorted_months = sorted(enumerate(monthly_scores), key=lambda x: x[1])
             burnout_months = [m[0] + 1 for m in sorted_months[:3]]
+        print(f"🔧 [Premium] 월별점수: {monthly_scores}")
+        print(f"🔧 [Premium] 위험월: {risk_months}, 기회월: {opportunity_months}, 번아웃월: {burnout_months}")
     else:
         risk_months = [3, 6, 9]
         opportunity_months = [5, 10, 11]
         burnout_months = [3, 6, 11]
     
-    # === 2. wealth_timing (재물 타이밍 관리) ===
-    if 'wealth_timing' not in result_json or not result_json['wealth_timing']:
-        # 일간별 재물운 키워드
-        ilgan_wealth_style = {
-            '甲': "새로운 사업이나 투자 기회를 적극 탐색하되, 무리한 확장은 피하세요.",
-            '乙': "협력 관계를 통한 수익 창출에 집중하고, 인맥을 자산으로 활용하세요.",
-            '丙': "눈에 띄는 프로젝트에서 기회를 찾되, 과시적 지출은 자제하세요.",
-            '丁': "꾸준한 전문성 향상이 재물로 연결됩니다. 내실을 다지는 투자를 권합니다.",
-            '戊': "안정적인 자산 축적에 집중하고, 부동산이나 장기 투자를 검토하세요.",
-            '己': "실속 있는 거래와 현금 흐름 관리에 신경 쓰세요. 작은 수익도 소중히.",
-            '庚': "과감한 결단으로 기회를 잡되, 무리한 레버리지는 피하세요.",
-            '辛': "전문성과 품질로 가치를 높이세요. 프리미엄 전략이 유효합니다.",
-            '壬': "다양한 수입원을 만들고, 정보력으로 투자 기회를 포착하세요.",
-            '癸': "직감을 믿되 데이터로 검증하세요. 숨겨진 기회에 주목하세요."
-        }
-        result_json['wealth_timing'] = {
-            "risk_months": risk_months[:3] if len(risk_months) >= 3 else risk_months + [12],
-            "opportunity_months": opportunity_months[:3] if len(opportunity_months) >= 3 else opportunity_months + [1],
-            "strategy": ilgan_wealth_style.get(ilgan, "상반기 지출 관리에 집중하고, 하반기 수익화 기회를 노리세요.")
-        }
+    # === 2. wealth_timing (재물 타이밍 관리) - 항상 덮어쓰기 ===
+    ilgan_wealth_style = {
+        '甲': "새로운 사업이나 투자 기회를 적극 탐색하되, 무리한 확장은 피하세요.",
+        '乙': "협력 관계를 통한 수익 창출에 집중하고, 인맥을 자산으로 활용하세요.",
+        '丙': "눈에 띄는 프로젝트에서 기회를 찾되, 과시적 지출은 자제하세요.",
+        '丁': "꾸준한 전문성 향상이 재물로 연결됩니다. 내실을 다지는 투자를 권합니다.",
+        '戊': "안정적인 자산 축적에 집중하고, 부동산이나 장기 투자를 검토하세요.",
+        '己': "실속 있는 거래와 현금 흐름 관리에 신경 쓰세요. 작은 수익도 소중히.",
+        '庚': "과감한 결단으로 기회를 잡되, 무리한 레버리지는 피하세요.",
+        '辛': "전문성과 품질로 가치를 높이세요. 프리미엄 전략이 유효합니다.",
+        '壬': "다양한 수입원을 만들고, 정보력으로 투자 기회를 포착하세요.",
+        '癸': "직감을 믿되 데이터로 검증하세요. 숨겨진 기회에 주목하세요."
+    }
+    result_json['wealth_timing'] = {
+        "risk_months": risk_months[:3] if len(risk_months) >= 3 else (risk_months + [12])[:3],
+        "opportunity_months": opportunity_months[:3] if len(opportunity_months) >= 3 else (opportunity_months + [1])[:3],
+        "strategy": ilgan_wealth_style.get(ilgan, "상반기 지출 관리에 집중하고, 하반기 수익화 기회를 노리세요.")
+    }
     
-    # === 3. weakness_missions (개운법 - 부족 오행 보완) ===
-    if 'weakness_missions' not in result_json or not result_json['weakness_missions']:
-        missing = oheng_analysis['missing']
-        weak = oheng_analysis['weak']
-        
-        # 부족한 오행 결정 (없는 오행 > 1개만 있는 오행 > 용신)
-        if missing:
-            target_element = missing[0]
-            element_kr_name = {'목': '시작의 힘', '화': '열정의 힘', '토': '안정의 힘', '금': '결단의 힘', '수': '지혜의 힘'}
-            weakness_desc = f"사주에 {target_element}({element_kr_name.get(target_element, '')})이 부족하여 보완이 필요합니다."
-        elif weak:
-            target_element = weak[0]
-            element_kr_name = {'목': '시작의 힘', '화': '열정의 힘', '토': '안정의 힘', '금': '결단의 힘', '수': '지혜의 힘'}
-            weakness_desc = f"사주에 {target_element}({element_kr_name.get(target_element, '')})이 약하여 보완이 필요합니다."
-        else:
-            target_element = yongsin
-            weakness_desc = f"용신인 {target_element} 기운을 강화하면 전체 운기가 상승합니다."
-        
-        missions = _generate_weakness_missions(target_element if missing else '', weak)
-        
-        result_json['weakness_missions'] = {
-            "missing_element": weakness_desc,
-            "monthly_missions": missions
-        }
+    # === 3. weakness_missions (개운법 - 부족 오행 보완) - 항상 덮어쓰기 ===
+    missing = oheng_analysis['missing']
+    weak = oheng_analysis['weak']
     
-    # === 4. psychological_relief (마인드셋업 - 심리 취약점 대응) ===
-    if 'psychological_relief' not in result_json or not result_json['psychological_relief']:
-        pattern = sipsin_pattern
-        
-        # 십성 기반 심리 패턴
-        affirmations = {
-            '비겁': "나는 도움을 받아도 괜찮은 사람이다. 함께하면 더 멀리 갈 수 있다.",
-            '식상': "나의 표현은 충분히 가치있다. 모든 사람의 인정이 필요하지 않다.",
-            '재성': "나는 물질 이상의 가치를 가진 사람이다. 풍요는 마음에서 시작된다.",
-            '관성': "완벽하지 않아도 나는 충분하다. 나 자신을 돌보는 것도 책임이다.",
-            '인성': "생각을 멈추고 행동해도 괜찮다. 실수해도 배울 수 있다."
-        }
-        
-        result_json['psychological_relief'] = {
-            "guilt_pattern": pattern['psychological_weakness'],
-            "reframing": f"{pattern['pattern_name']} 성향의 당신에게 현재의 멈춤이나 지연은 '실패'가 아닙니다. 운의 흐름상 지금은 내면을 다지는 시간입니다. 결과보다 과정을 믿고, 80% 완성도로 먼저 시작하는 전략을 권합니다.",
-            "affirmation": affirmations.get(pattern['dominant'], "나는 지금 이 순간에도 성장하고 있다.")
-        }
+    # 부족한 오행 결정 (없는 오행 > 1개만 있는 오행 > 용신)
+    if missing:
+        target_element = missing[0]
+        element_kr_name = {'목': '시작의 힘', '화': '열정의 힘', '토': '안정의 힘', '금': '결단의 힘', '수': '지혜의 힘'}
+        weakness_desc = f"사주에 {target_element}({element_kr_name.get(target_element, '')})이 부족하여 보완이 필요합니다."
+    elif weak:
+        target_element = weak[0]
+        element_kr_name = {'목': '시작의 힘', '화': '열정의 힘', '토': '안정의 힘', '금': '결단의 힘', '수': '지혜의 힘'}
+        weakness_desc = f"사주에 {target_element}({element_kr_name.get(target_element, '')})이 약하여 보완이 필요합니다."
+    else:
+        target_element = yongsin
+        weakness_desc = f"용신인 {target_element} 기운을 강화하면 전체 운기가 상승합니다."
     
-    # === 5. relationship_strategy (관계 가이드) ===
-    if 'relationship_strategy' not in result_json or not result_json['relationship_strategy']:
-        pattern = sipsin_pattern
-        
-        family_guides = {
-            '비겁': "가족에게도 도움을 요청하세요. 혼자 해결하려는 모습이 오히려 거리감을 만들 수 있습니다.",
-            '식상': "가족의 반응에 너무 민감하지 마세요. 표현은 하되, 반응은 상대의 몫입니다.",
-            '재성': "가족 관계에서 금전적 계산을 줄이세요. 정서적 교류가 더 중요합니다.",
-            '관성': "가족에게 완벽한 모습만 보이려 하지 마세요. 약한 모습도 괜찮습니다.",
-            '인성': "가족과의 대화에서 조언보다 경청을 먼저 하세요. 들어주는 것이 최고의 지지입니다."
-        }
-        
-        result_json['relationship_strategy'] = {
-            "pattern_name": f"{pattern['relationship_style']} ({pattern['pattern_name']})",
-            "boundary_guide": pattern['boundary_guide'],
-            "family_energy": family_guides.get(pattern['dominant'], "가족과 서로의 리듬을 존중하고, 강요보다는 제안의 형태로 소통하세요.")
-        }
+    missions = _generate_weakness_missions(target_element if missing else '', weak)
     
-    # === 6. rest_calendar (에너지 달력) ===
-    if 'rest_calendar' not in result_json or not result_json['rest_calendar']:
-        rest_activities = _get_rest_activities_by_yongsin(yongsin)
-        
-        result_json['rest_calendar'] = {
-            "burnout_months": burnout_months[:3] if len(burnout_months) >= 3 else burnout_months + [6],
-            "rest_activities": rest_activities
-        }
+    result_json['weakness_missions'] = {
+        "missing_element": weakness_desc,
+        "monthly_missions": missions
+    }
     
-    # === 7. digital_amulet (디지털 부적) ===
-    if 'digital_amulet' not in result_json or not result_json['digital_amulet']:
-        yongsin_quotes = {
-            '목': "나무는 바람에 흔들려도 뿌리를 더 깊이 내립니다. 당신의 성장도 그렇습니다.",
-            '화': "작은 불씨가 어둠 전체를 밝힙니다. 당신의 열정이 길을 비출 것입니다.",
-            '토': "대지는 묵묵히 모든 것을 품고 키워냅니다. 당신의 중심이 흔들리지 않기를.",
-            '금': "금은 두드려질수록 더 단단해집니다. 지금의 어려움이 당신을 빛나게 할 것입니다.",
-            '수': "물은 장애물을 만나면 돌아 흐릅니다. 막히면 고이고, 고이면 깊어지고, 깊어지면 다시 흐릅니다."
-        }
-        result_json['digital_amulet'] = {
-            "yongsin_element": yongsin,
-            "quote": yongsin_quotes.get(yongsin, "당신 안에 이미 답이 있습니다."),
-            "image_color": yongsin_color
-        }
+    # === 4. psychological_relief (마인드셋업 - 심리 취약점 대응) - 항상 덮어쓰기 ===
+    pattern = sipsin_pattern
+    
+    # 십성 기반 심리 패턴
+    affirmations = {
+        '비겁': "나는 도움을 받아도 괜찮은 사람이다. 함께하면 더 멀리 갈 수 있다.",
+        '식상': "나의 표현은 충분히 가치있다. 모든 사람의 인정이 필요하지 않다.",
+        '재성': "나는 물질 이상의 가치를 가진 사람이다. 풍요는 마음에서 시작된다.",
+        '관성': "완벽하지 않아도 나는 충분하다. 나 자신을 돌보는 것도 책임이다.",
+        '인성': "생각을 멈추고 행동해도 괜찮다. 실수해도 배울 수 있다."
+    }
+    
+    result_json['psychological_relief'] = {
+        "guilt_pattern": pattern['psychological_weakness'],
+        "reframing": f"{pattern['pattern_name']} 성향의 당신에게 현재의 멈춤이나 지연은 '실패'가 아닙니다. 운의 흐름상 지금은 내면을 다지는 시간입니다. 결과보다 과정을 믿고, 80% 완성도로 먼저 시작하는 전략을 권합니다.",
+        "affirmation": affirmations.get(pattern['dominant'], "나는 지금 이 순간에도 성장하고 있다.")
+    }
+    
+    # === 5. relationship_strategy (관계 가이드) - 항상 덮어쓰기 ===
+    family_guides = {
+        '비겁': "가족에게도 도움을 요청하세요. 혼자 해결하려는 모습이 오히려 거리감을 만들 수 있습니다.",
+        '식상': "가족의 반응에 너무 민감하지 마세요. 표현은 하되, 반응은 상대의 몫입니다.",
+        '재성': "가족 관계에서 금전적 계산을 줄이세요. 정서적 교류가 더 중요합니다.",
+        '관성': "가족에게 완벽한 모습만 보이려 하지 마세요. 약한 모습도 괜찮습니다.",
+        '인성': "가족과의 대화에서 조언보다 경청을 먼저 하세요. 들어주는 것이 최고의 지지입니다."
+    }
+    
+    result_json['relationship_strategy'] = {
+        "pattern_name": f"{pattern['relationship_style']} ({pattern['pattern_name']})",
+        "boundary_guide": pattern['boundary_guide'],
+        "family_energy": family_guides.get(pattern['dominant'], "가족과 서로의 리듬을 존중하고, 강요보다는 제안의 형태로 소통하세요.")
+    }
+    
+    # === 6. rest_calendar (에너지 달력) - 항상 덮어쓰기 ===
+    rest_activities = _get_rest_activities_by_yongsin(yongsin)
+    
+    result_json['rest_calendar'] = {
+        "burnout_months": burnout_months[:3] if len(burnout_months) >= 3 else (burnout_months + [6])[:3],
+        "rest_activities": rest_activities
+    }
+    
+    # === 7. digital_amulet (디지털 부적) - 항상 덮어쓰기 ===
+    yongsin_quotes = {
+        '목': "나무는 바람에 흔들려도 뿌리를 더 깊이 내립니다. 당신의 성장도 그렇습니다.",
+        '화': "작은 불씨가 어둠 전체를 밝힙니다. 당신의 열정이 길을 비출 것입니다.",
+        '토': "대지는 묵묵히 모든 것을 품고 키워냅니다. 당신의 중심이 흔들리지 않기를.",
+        '금': "금은 두드려질수록 더 단단해집니다. 지금의 어려움이 당신을 빛나게 할 것입니다.",
+        '수': "물은 장애물을 만나면 돌아 흐릅니다. 막히면 고이고, 고이면 깊어지고, 깊어지면 다시 흐릅니다."
+    }
+    result_json['digital_amulet'] = {
+        "yongsin_element": yongsin,
+        "quote": yongsin_quotes.get(yongsin, "당신 안에 이미 답이 있습니다."),
+        "image_color": yongsin_color
+    }
+    
+    print(f"✅ [Premium] 생성완료 - 용신:{yongsin}, 부적색상:{yongsin_color}")
     
     return result_json
 
