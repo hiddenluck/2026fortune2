@@ -665,8 +665,8 @@ def analyze_ai_report(manse_info: Dict, daewoon_info: Dict, full_q: str, profile
     try:
         genai.configure(api_key=api_key)
         
-        # 모델 우선순위: gemini-2.0-flash-lite → gemini-1.5-flash (할당량 초과 시 대체)
-        models_to_try = ['gemini-2.0-flash-lite', 'gemini-1.5-flash']
+        # 모델 우선순위: gemini-1.5-flash → gemini-1.5-pro (할당량 초과 시 대체)
+        models_to_try = ['gemini-1.5-flash', 'gemini-1.5-pro']
         response = None
         last_error = None
         
