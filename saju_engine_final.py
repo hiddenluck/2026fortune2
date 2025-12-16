@@ -382,8 +382,23 @@ JIJI_TO_STEM_INDEX = {
 }
 
 
-def calculate_pillar_sipsin(day_master: str, ganji: str) -> Dict:
-    """십성 계산"""
+def calculate_pillar_sipsin(day_master: str, ganji: str, is_day_pillar: bool = False) -> Dict:
+    """
+    십성 계산
+    
+    Args:
+        day_master: 일간 (일주의 천간)
+        ganji: 계산할 주의 간지 (예: '甲子')
+        is_day_pillar: 일주인지 여부 (일주 천간만 '일원', 나머지는 '비견')
+    
+    Returns:
+        {'stem_ten_god': '...', 'branch_ten_god': '...'}
+    
+    Notes:
+        - 일원(日元): 오직 일주의 천간(일간)만 해당
+        - 비견(比肩): 일간과 같은 오행/음양인 다른 천간 또는 지지의 지장간
+        - 지지의 지장간이 일간과 같아도 '비견'으로 표시 (일원 X)
+    """
     if len(ganji) != 2 or day_master not in CHEONGAN:
         return {'stem_ten_god': 'N/A', 'branch_ten_god': 'N/A'}
     
@@ -391,12 +406,21 @@ def calculate_pillar_sipsin(day_master: str, ganji: str) -> Dict:
     stem = ganji[0]
     branch = ganji[1]
     
+    # 천간 십성 계산
     stem_idx = CHEONGAN.index(stem)
     stem_sipsin = TEN_GODS_MAP_STEM.get((day_idx, stem_idx), 'N/A')
     
+    # 🔧 일주의 천간만 '일원', 다른 주의 천간이 일간과 같으면 '비견'
+    if stem_sipsin == '일원' and not is_day_pillar:
+        stem_sipsin = '비견'
+    
+    # 지지 십성 계산 (지장간 본기 기준)
     branch_stem_idx = JIJI_TO_STEM_INDEX.get(branch)
     if branch_stem_idx is not None:
         branch_sipsin = TEN_GODS_MAP_STEM.get((day_idx, branch_stem_idx), 'N/A')
+        # 🔧 지지의 지장간은 절대로 '일원'이 될 수 없음 (항상 '비견'으로 변환)
+        if branch_sipsin == '일원':
+            branch_sipsin = '비견'
     else:
         branch_sipsin = 'N/A'
     
@@ -597,9 +621,14 @@ class SajuEngine:
         # 시주 계산 (분 단위까지 정확하게)
         shi_ganji = self._get_shi_ganji(day_gan, birth_dt.hour, birth_dt.minute)
         
-        # 십성 계산
+        # 십성 계산 (일주만 is_day_pillar=True로 설정하여 일원 유지)
         pillars = [year_ganji, month_ganji, day_ganji, shi_ganji]
-        ten_gods_array = [calculate_pillar_sipsin(day_gan, p) for p in pillars]
+        ten_gods_array = [
+            calculate_pillar_sipsin(day_gan, pillars[0], is_day_pillar=False),  # 년주
+            calculate_pillar_sipsin(day_gan, pillars[1], is_day_pillar=False),  # 월주
+            calculate_pillar_sipsin(day_gan, pillars[2], is_day_pillar=True),   # 일주 (일원 유지)
+            calculate_pillar_sipsin(day_gan, pillars[3], is_day_pillar=False),  # 시주
+        ]
         
         # 대운 계산
         daewoon_info = self._calculate_daewoon(year_ganji, month_ganji, birth_dt, gender, prev_jeolgi, next_jeolgi)

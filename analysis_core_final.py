@@ -324,9 +324,18 @@ JIJI_TO_STEM_INDEX = {
 }
 # 🚨 壬(8), 癸(9)의 일원 인덱스가 0~9 기준으로 '비견'이 아닌 '일원'으로 처리되도록 TEN_GODS_MAP_STEM도 수정되었습니다.
 
-def calculate_pillar_sipsin(day_master: str, ganji: str) -> Dict:
+def calculate_pillar_sipsin(day_master: str, ganji: str, is_day_pillar: bool = False) -> Dict:
     """
     일간을 기준으로 특정 간지(柱)의 천간(Stem)과 지지(Branch)의 십성(Ten Gods)을 계산합니다.
+    
+    Args:
+        day_master: 일간 (일주의 천간)
+        ganji: 계산할 주의 간지 (예: '甲子')
+        is_day_pillar: 일주인지 여부 (일주 천간만 '일원', 나머지는 '비견')
+    
+    Notes:
+        - 일원(日元): 오직 일주의 천간(일간)만 해당
+        - 비견(比肩): 일간과 같은 오행/음양인 다른 천간 또는 지지의 지장간
     """
     if len(ganji) != 2 or day_master not in CHEONGAN:
         return {'stem_ten_god': 'N/A', 'branch_ten_god': 'N/A'}
@@ -339,11 +348,17 @@ def calculate_pillar_sipsin(day_master: str, ganji: str) -> Dict:
     stem_idx = CHEONGAN.index(stem)
     stem_sipsin = TEN_GODS_MAP_STEM.get((day_idx, stem_idx), 'N/A')
     
+    # 🔧 일주의 천간만 '일원', 다른 주의 천간이 일간과 같으면 '비견'
+    if stem_sipsin == '일원' and not is_day_pillar:
+        stem_sipsin = '비견'
+    
     # 2. 지지 십성 계산 (대표 오행의 십성)
-    # 지지에 해당하는 천간 인덱스를 가져와서 일간과 비교
     branch_stem_idx = JIJI_TO_STEM_INDEX.get(branch)
     if branch_stem_idx is not None:
         branch_sipsin = TEN_GODS_MAP_STEM.get((day_idx, branch_stem_idx), 'N/A')
+        # 🔧 지지의 지장간은 절대로 '일원'이 될 수 없음 (항상 '비견'으로 변환)
+        if branch_sipsin == '일원':
+            branch_sipsin = '비견'
     else:
         branch_sipsin = 'N/A'
 
@@ -1378,9 +1393,14 @@ class SajuEngine:
         # 대운 정보 계산
         daewoon_info = self._calculate_full_daewoon(year_ganji_final, month_ganji, birth_dt, gender, past_jeolgi['datetime'], future_jeolgi['datetime'])
         
-        # 십성 계산 (추가된 부분)
+        # 십성 계산 (일주만 is_day_pillar=True로 설정하여 일원 유지)
         pillars_ganji = [year_ganji_final, month_ganji, day_ganji, shi_ganji]
-        ten_gods_array = [calculate_pillar_sipsin(day_gan, g) for g in pillars_ganji]
+        ten_gods_array = [
+            calculate_pillar_sipsin(day_gan, pillars_ganji[0], is_day_pillar=False),  # 년주
+            calculate_pillar_sipsin(day_gan, pillars_ganji[1], is_day_pillar=False),  # 월주
+            calculate_pillar_sipsin(day_gan, pillars_ganji[2], is_day_pillar=True),   # 일주 (일원 유지)
+            calculate_pillar_sipsin(day_gan, pillars_ganji[3], is_day_pillar=False),  # 시주
+        ]
 
         return {
             "년주": year_ganji_final, "월주": month_ganji, "일주": day_ganji, "시주": shi_ganji,
