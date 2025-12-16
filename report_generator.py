@@ -2112,7 +2112,8 @@ def generate_free_report_html(data: Dict) -> str:
                     <i class="fas fa-crown"></i> 희구소 신년운세 서비스 전용
                 </h2>
                 <p style="margin: 0; font-size: 1.1rem; line-height: 1.8; color: #666;">
-                    2026년 한 해의 길잡이가 되는 나만의 자세한 분석 보고서는<br>
+                    2026년 한 해의 길잡이가 되는<br>
+                    나만의 자세한 분석 보고서는<br>
                     아래 링크에서 확인하세요
                 </p>
             </div>
@@ -2148,7 +2149,7 @@ def generate_free_report_html(data: Dict) -> str:
                         font-size: 1.2rem;
                         box-shadow: 0 6px 20px rgba(255, 126, 95, 0.5);
                         transition: all 0.3s ease;">
-                        <i class="fas fa-lock-open"></i> 자세한 운 확인하기
+                        <i class="fas fa-lock-open"></i> 자세한 운<br>확인하기
                     </a>
                     <p style="margin-top: 12px; font-size: 0.9rem; color: #888; text-shadow: 0 0 10px #fff;">✨ 상세 분석 · 월별 가이드 · Q&A · 개운법 포함</p>
                 </div>
