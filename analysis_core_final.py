@@ -19,17 +19,14 @@ try:
         DAY_STEM_TO_TIME_STEM_START_INDEX, 
         YEAR_STEM_TO_MONTH_STEM_INDEX,
         O_HAENG_MAP,
-        TEN_GAN_PERSONA
-    )
-    # 🔧 saju_data_updated.py에서 점수 계산 함수 임포트
-    from saju_data_updated import (
+        TEN_GAN_PERSONA,
         calculate_total_luck_score,
         JOHU_SCORES_LOOKUP,
         JIJI_SCORES_LOOKUP,
         SINJEONG_JOHU_SCORES_LOOKUP
     )
 except ImportError as e:
-    print(f"🚨 오류: saju_data.py 또는 saju_data_updated.py 파일이 없거나 상수가 누락되었습니다: {e}")
+    print(f"🚨 오류: saju_data.py 파일이 없거나 상수가 누락되었습니다: {e}")
     raise
 
 # --------------------------------------------------------------------------
@@ -662,21 +659,43 @@ def analyze_ai_report(manse_info: Dict, daewoon_info: Dict, full_q: str, profile
         monthly_scores=monthly_scores  # NEW: 테이블 기반 월별 점수 전달
     )
     
-    # 4. AI API 호출 및 응답 처리
+    # 4. AI API 호출 및 응답 처리 (ResourceExhausted 대비 재시도 로직)
+    import time
+    
     try:
         genai.configure(api_key=api_key)
         
-        response = genai.GenerativeModel(
-            'gemini-2.5-flash',
-            system_instruction=get_system_instruction()
-        ).generate_content(
-            contents=[prompt],
-            generation_config={
-                "temperature": 0.5,
-                "response_mime_type": "application/json",
-                "max_output_tokens": 16384,  # 🔧 응답 잘림 방지를 위해 토큰 제한 증가
-            }
-        )
+        # 모델 우선순위: gemini-2.0-flash-lite → gemini-1.5-flash (할당량 초과 시 대체)
+        models_to_try = ['gemini-2.0-flash-lite', 'gemini-1.5-flash']
+        response = None
+        last_error = None
+        
+        for model_name in models_to_try:
+            try:
+                response = genai.GenerativeModel(
+                    model_name,
+                    system_instruction=get_system_instruction()
+                ).generate_content(
+                    contents=[prompt],
+                    generation_config={
+                        "temperature": 0.5,
+                        "response_mime_type": "application/json",
+                        "max_output_tokens": 8192,
+                    }
+                )
+                break  # 성공하면 루프 종료
+            except Exception as model_error:
+                last_error = model_error
+                error_str = str(model_error)
+                if "ResourceExhausted" in error_str or "429" in error_str:
+                    print(f"⚠️ {model_name} 할당량 초과, 다음 모델 시도...")
+                    time.sleep(1)
+                    continue
+                else:
+                    raise  # 다른 오류는 바로 raise
+        
+        if response is None:
+            raise last_error or Exception("모든 모델 할당량 초과")
         
         response_text = response.text.strip()
         
