@@ -776,7 +776,6 @@ def render_app():
             # GitHub API를 통해 reports 폴더에 저장
             import requests
             import base64
-            from datetime import datetime
             
             # GitHub 설정 (Streamlit secrets에서 가져오기)
             try:
