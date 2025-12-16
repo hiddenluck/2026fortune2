@@ -775,8 +775,14 @@ def render_app():
             
             # 생성 번호 읽기 및 증가
             import os
-            counter_file = "reports/counter.txt"
+            # 절대 경로로 수정
+            reports_dir = "/home/user/webapp/2026fortune2/reports"
+            counter_file = f"{reports_dir}/counter.txt"
+            
             try:
+                # reports 폴더 생성 (없으면)
+                os.makedirs(reports_dir, exist_ok=True)
+                
                 if os.path.exists(counter_file):
                     with open(counter_file, 'r') as f:
                         counter = int(f.read().strip())
@@ -785,7 +791,7 @@ def render_app():
                     
                 # 파일명 생성 (생성번호_고객명_2026.html)
                 report_filename = f"{counter:04d}_{name}_2026.html"
-                report_path = f"reports/{report_filename}"
+                report_path = f"{reports_dir}/{report_filename}"
                 
                 # 프리미엄 HTML 저장
                 with open(report_path, 'w', encoding='utf-8') as f:

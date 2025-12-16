@@ -1771,12 +1771,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             renderSewoonGrid();
             renderRadarChart();
             renderSummary();
-            // 무료 버전에서 제거된 섹션들
-            // renderDetails();
-            // renderMonthlyChart(); 
-            // renderMonthlyGuide();
-            // renderQA();
-            // renderActions();
+            renderDetails();
+            renderMonthlyChart();
+            renderMonthlyGuide();
+            renderQA();
+            renderActions();
             
             // 네비게이션 활성화
             document.querySelectorAll('.nav-item').forEach(item => {
@@ -2035,6 +2034,24 @@ def generate_free_report_html(data: Dict) -> str:
     # 프리미엄 섹션 마커 제거 (무료 버전)
     html = html.replace('<!-- PREMIUM_SECTIONS_MARKER -->', '')
     
+    # 무료 버전: 일부 섹션 제거 및 JavaScript 함수 비활성화
+    # 제거할 섹션들
+    html = html.replace('<section id="details">', '<section id="details" style="display:none;">')
+    html = html.replace('<section id="monthly-chart"', '<section id="monthly-chart" style="display:none;"')
+    html = html.replace('<section id="qa"', '<section id="qa" style="display:none;"')
+    html = html.replace('<section id="actions">', '<section id="actions" style="display:none;">')
+    
+    # JavaScript 함수 호출 비활성화 (무료 버전만)
+    html = html.replace('renderDetails();', '// renderDetails();')
+    html = html.replace('renderMonthlyChart();', '// renderMonthlyChart();')
+    html = html.replace('renderMonthlyGuide();', '// renderMonthlyGuide();')
+    html = html.replace('renderQA();', '// renderQA();')
+    html = html.replace('renderActions();', '// renderActions();')
+    
+    # 1:1 상담 버튼 제거 (무료 버전)
+    html = html.replace('<a href="https://litt.ly/hiddenlucky" target="_blank" class="footer-link-btn primary">', 
+                       '<a href="https://litt.ly/hiddenlucky" target="_blank" class="footer-link-btn primary" style="display:none;">')
+    
     return html
 
 
@@ -2072,8 +2089,30 @@ def generate_premium_report_html(data: Dict) -> str:
     Returns:
         완성된 HTML 문자열
     """
-    # 1. 기존 무료 리포트 생성
-    base_html = generate_free_report_html(data)
+    # 1. 프리미엄용 전체 HTML 생성 (모든 섹션 활성화)
+    manse = data.get('manse', {})
+    analysis = data.get('analysis', {})
+    
+    # 헤더 정보
+    day_master = manse.get('day_master', '甲')
+    customer_name = manse.get('customer_name', '고객')
+    summary_card = analysis.get('summary_card', {})
+    main_keyword = summary_card.get('keyword', '당신의 2026년')
+    final_message = analysis.get('final_message', '논리적인 시스템만이 당신의 추진력을 완성합니다.')
+    key_message_2026 = analysis.get('key_message_2026', summary_card.get('action_item', '2026년, 당신의 운명이 펼쳐집니다.'))
+    
+    # JavaScript용 데이터
+    report_data = _extract_report_data(data)
+    report_data_json = json.dumps(report_data, ensure_ascii=False, indent=2)
+    
+    # HTML 템플릿에 데이터 주입
+    base_html = HTML_TEMPLATE
+    base_html = base_html.replace('{DAY_MASTER}', day_master)
+    base_html = base_html.replace('{CUSTOMER_NAME}', customer_name)
+    base_html = base_html.replace('{MAIN_KEYWORD}', main_keyword)
+    base_html = base_html.replace('{FINAL_MESSAGE}', final_message)
+    base_html = base_html.replace('{KEY_MESSAGE_2026}', key_message_2026)
+    base_html = base_html.replace('{REPORT_DATA_JSON}', report_data_json)
     
     # 2. 프리미엄 섹션 데이터 추출
     analysis = data.get('analysis', {})
