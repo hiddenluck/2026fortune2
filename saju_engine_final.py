@@ -457,12 +457,40 @@ class SajuEngine:
         days_passed = (dt.date() - REF_DATE).days
         return self.ganji_60[(REF_DAY_GANJI_INDEX + days_passed) % 60]
     
-    def _get_shi_ganji(self, day_gan: str, birth_hour: int) -> str:
-        """시주 계산"""
-        if birth_hour == 23:
-            hour_index = 0
-        else:
-            hour_index = (birth_hour + 1) // 2
+    def _get_shi_ganji(self, day_gan: str, birth_hour: int, birth_minute: int = 0) -> str:
+        """시주 계산 - 명리학적 정확한 시진 경계 (30분 기준)"""
+        # 시간을 분으로 변환
+        total_minutes = birth_hour * 60 + birth_minute
+        
+        # 명리학적 시진 경계 (30분 기준)
+        # 자시: 23:30 ~ 01:30, 축시: 01:30 ~ 03:30, 인시: 03:30 ~ 05:30, 묘시: 05:30 ~ 07:30
+        # 진시: 07:30 ~ 09:30, 사시: 09:30 ~ 11:30, 오시: 11:30 ~ 13:30, 미시: 13:30 ~ 15:30
+        # 신시: 15:30 ~ 17:30, 유시: 17:30 ~ 19:30, 술시: 19:30 ~ 21:30, 해시: 21:30 ~ 23:30
+        
+        if total_minutes >= 1410 or total_minutes < 90:  # 23:30 ~ 01:30
+            hour_index = 0  # 자시
+        elif total_minutes < 210:  # 01:30 ~ 03:30
+            hour_index = 1  # 축시
+        elif total_minutes < 330:  # 03:30 ~ 05:30
+            hour_index = 2  # 인시
+        elif total_minutes < 450:  # 05:30 ~ 07:30
+            hour_index = 3  # 묘시
+        elif total_minutes < 570:  # 07:30 ~ 09:30
+            hour_index = 4  # 진시
+        elif total_minutes < 690:  # 09:30 ~ 11:30
+            hour_index = 5  # 사시
+        elif total_minutes < 810:  # 11:30 ~ 13:30
+            hour_index = 6  # 오시
+        elif total_minutes < 930:  # 13:30 ~ 15:30
+            hour_index = 7  # 미시
+        elif total_minutes < 1050:  # 15:30 ~ 17:30
+            hour_index = 8  # 신시
+        elif total_minutes < 1170:  # 17:30 ~ 19:30
+            hour_index = 9  # 유시
+        elif total_minutes < 1290:  # 19:30 ~ 21:30
+            hour_index = 10  # 술시
+        else:  # 21:30 ~ 23:30
+            hour_index = 11  # 해시
         
         shi_zhi = self.jiji[hour_index % 12]
         start_stem_index = DAY_STEM_TO_TIME_STEM_START_INDEX[day_gan]
@@ -566,8 +594,8 @@ class SajuEngine:
         day_ganji = self._get_day_ganji(birth_dt)
         day_gan = day_ganji[0]
         
-        # 시주 계산
-        shi_ganji = self._get_shi_ganji(day_gan, birth_dt.hour)
+        # 시주 계산 (분 단위까지 정확하게)
+        shi_ganji = self._get_shi_ganji(day_gan, birth_dt.hour, birth_dt.minute)
         
         # 십성 계산
         pillars = [year_ganji, month_ganji, day_ganji, shi_ganji]
