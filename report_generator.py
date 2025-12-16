@@ -1078,52 +1078,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             </div>
         </section>
 
-        <!-- ==================== 3. 상세 분석 섹션 ==================== -->
-        <section id="details">
-            <h2 class="section-title"><i class="fas fa-layer-group"></i> 상세 분석</h2>
-            <div id="detailsContent">
-                <!-- JavaScript에서 렌더링 -->
-            </div>
-        </section>
-
-        <!-- ==================== 월별 운세 차트 + 월별 가이드 ==================== -->
-        <section id="monthly-chart" class="card no-click">
-            <h2 class="section-title"><i class="fas fa-chart-line"></i> 2026 월별 운세 흐름</h2>
-            <div class="flow-chart-box">
-                <canvas id="monthlyFlowChart"></canvas>
-            </div>
-            
-            <!-- 월별 버튼 -->
-            <div class="month-buttons" id="monthButtons">
-                <!-- JavaScript에서 렌더링 -->
-            </div>
-            
-            <!-- 월별 상세 설명 -->
-            <div class="month-detail-box" id="monthDetailBox">
-                <!-- JavaScript에서 렌더링 -->
-            </div>
-        </section>
-
-        <!-- ==================== Q&A 섹션 ==================== -->
-        <section id="qa" class="card no-click">
-            <h2 class="section-title"><i class="fas fa-question-circle"></i> <span id="qaTitleName">{CUSTOMER_NAME}</span>님이 궁금한 질문</h2>
-            <div id="qaContent">
-                <!-- JavaScript에서 렌더링 -->
-            </div>
-        </section>
-
         <!-- ==================== 4. 프리미엄 섹션 (동적 삽입 마커) ==================== -->
         <!-- PREMIUM_SECTIONS_MARKER -->
-
-        <!-- ==================== 5. 개운법 섹션 ==================== -->
-        <section id="actions">
-            <div class="key-action-box">
-                <h3>🎯 2026 실속 솔루션</h3>
-                <ul class="key-action-list" id="actionsList">
-                    <!-- JavaScript에서 렌더링 -->
-                </ul>
-            </div>
-        </section>
 
         <!-- ==================== 최종 메시지 ==================== -->
         <section class="final-message-card" id="finalMessage">
@@ -1133,11 +1089,36 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             </p>
         </section>
         
+        <!-- ==================== 프리미엄 유도 섹션 (블러 처리) ==================== -->
+        <section class="premium-promo-section" style="margin: 40px 0; padding: 30px; background: linear-gradient(135deg, rgba(255, 126, 95, 0.05) 0%, rgba(255, 209, 188, 0.05) 100%); border-radius: 20px; border: 2px solid #FFD1BC; position: relative;">
+            <div style="filter: blur(5px); opacity: 0.6; pointer-events: none;">
+                <h2 style="text-align: center; color: #FF7E5F; font-size: 1.8rem; margin-bottom: 10px;">
+                    <i class="fas fa-crown"></i> 2026 희구소 신년운세 서비스 전용
+                </h2>
+                <p style="text-align: center; font-size: 1.1rem; color: #666; margin-bottom: 25px;">
+                    2026년 한 해의 길잡이가 되는 나만의 자세한 분석 보고서는<br>아래 링크에서 확인하세요
+                </p>
+            </div>
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
+                <a href="https://litt.ly/hiddenlucky/sale/PsIuTXE" target="_blank" style="
+                    display: inline-block;
+                    padding: 15px 35px;
+                    background: #FF7E5F;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 30px;
+                    font-weight: bold;
+                    font-size: 1.1rem;
+                    box-shadow: 0 4px 15px rgba(255, 126, 95, 0.3);
+                    transition: all 0.3s ease;
+                " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    자세한 운 확인하기
+                </a>
+            </div>
+        </section>
+        
         <!-- ==================== 하단 링크 섹션 ==================== -->
         <section class="footer-links">
-            <a href="https://litt.ly/hiddenlucky" target="_blank" class="footer-link-btn primary">
-                <i class="fas fa-comments"></i> 1:1 깊은 상담 요청하기
-            </a>
             <a href="https://www.instagram.com/hiddenluck_lab" target="_blank" class="footer-link-btn secondary">
                 <i class="fab fa-instagram"></i> 희구소 인스타그램
             </a>
@@ -1652,8 +1633,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     },
                     scales: {
                         y: {
-                            beginAtZero: false,
-                            min: 40,
+                            beginAtZero: true,
+                            min: 0,
                             max: 100,
                             ticks: {
                                 stepSize: 10,
@@ -1790,11 +1771,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             renderSewoonGrid();
             renderRadarChart();
             renderSummary();
-            renderDetails();
-            renderMonthlyChart();
-            renderMonthlyGuide();
-            renderQA();
-            renderActions();
+            // 무료 버전에서 제거된 섹션들
+            // renderDetails();
+            // renderMonthlyChart(); 
+            // renderMonthlyGuide();
+            // renderQA();
+            // renderActions();
             
             // 네비게이션 활성화
             document.querySelectorAll('.nav-item').forEach(item => {

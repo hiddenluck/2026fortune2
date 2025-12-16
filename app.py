@@ -770,16 +770,44 @@ def render_app():
         st.caption("✨ 간단한 운세 미리보기 (5개 섹션)")
 
         with col2:
-         st.markdown("#### 💎 프리미엄 리포트")
-         premium_html = generate_premium_report_html(st.session_state.report_package_data)
-         st.download_button(
-            label="💎 프리미엄 리포트 다운로드 (₩29,000)",
-            data=premium_html.encode('utf-8'),
-            file_name=f"{name}_프리미엄사주_2026.html",
-            mime="text/html",
-            key='download_premium_btn'
-         )
-         st.caption("🌟 전체 분석 + 6개 특별 섹션 (재물 타이밍, 심리 해소 등)")
+            st.markdown("#### 💎 프리미엄 리포트")
+            premium_html = generate_premium_report_html(st.session_state.report_package_data)
+            
+            # 생성 번호 읽기 및 증가
+            import os
+            counter_file = "reports/counter.txt"
+            try:
+                if os.path.exists(counter_file):
+                    with open(counter_file, 'r') as f:
+                        counter = int(f.read().strip())
+                else:
+                    counter = 1
+                    
+                # 파일명 생성 (생성번호_고객명_2026.html)
+                report_filename = f"{counter:04d}_{name}_2026.html"
+                report_path = f"reports/{report_filename}"
+                
+                # 프리미엄 HTML 저장
+                with open(report_path, 'w', encoding='utf-8') as f:
+                    f.write(premium_html)
+                
+                # 카운터 업데이트
+                with open(counter_file, 'w') as f:
+                    f.write(f"{counter + 1:04d}")
+                    
+                st.success(f"✅ 리포트가 자동 저장되었습니다: {report_filename}")
+                
+            except Exception as e:
+                st.warning(f"⚠️ 자동 저장 실패: {e}")
+            
+            st.download_button(
+                label="💎 프리미엄 리포트 다운로드 (₩29,000)",
+                data=premium_html.encode('utf-8'),
+                file_name=f"{name}_프리미엄사주_2026.html",
+                mime="text/html",
+                key='download_premium_btn'
+            )
+            st.caption("🌟 전체 분석 + 6개 특별 섹션 (재물 타이밍, 심리 해소 등)")
         st.info("💡 차이점: 무료(5개 섹션) vs 프리미엄(11개 섹션 + 액션 플랜)")
 
         st.markdown("""<p style="text-align:center; color:#888; margin-top:10px; font-size:0.9rem;">* 주의: **반드시 위 다운로드 버튼을 사용하여 고객에게 파일을 전달해 주세요.**</p>""", unsafe_allow_html=True)
