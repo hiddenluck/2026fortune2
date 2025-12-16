@@ -775,9 +775,12 @@ def render_app():
             
             # 생성 번호 읽기 및 증가
             import os
-            # 절대 경로로 수정
-            reports_dir = "/home/user/webapp/2026fortune2/reports"
+            import subprocess
+            
+            # 올바른 절대 경로 (프로젝트 루트의 reports 폴더)
+            reports_dir = "/home/user/webapp/reports"
             counter_file = f"{reports_dir}/counter.txt"
+            project_root = "/home/user/webapp"
             
             try:
                 # reports 폴더 생성 (없으면)
@@ -788,6 +791,9 @@ def render_app():
                         counter = int(f.read().strip())
                 else:
                     counter = 1
+                    # 카운터 파일 초기화
+                    with open(counter_file, 'w') as f:
+                        f.write("0001")
                     
                 # 파일명 생성 (생성번호_고객명_2026.html)
                 report_filename = f"{counter:04d}_{name}_2026.html"
@@ -800,8 +806,16 @@ def render_app():
                 # 카운터 업데이트
                 with open(counter_file, 'w') as f:
                     f.write(f"{counter + 1:04d}")
-                    
-                st.success(f"✅ 리포트가 자동 저장되었습니다: {report_filename}")
+                
+                # Git에 추가하고 커밋/푸시
+                try:
+                    subprocess.run(['git', 'add', report_path], cwd=project_root, check=True, capture_output=True)
+                    subprocess.run(['git', 'add', counter_file], cwd=project_root, check=True, capture_output=True)
+                    subprocess.run(['git', 'commit', '-m', f'Add report: {report_filename}'], cwd=project_root, capture_output=True)
+                    subprocess.run(['git', 'push', 'origin', 'main'], cwd=project_root, capture_output=True)
+                    st.success(f"✅ 리포트 저장 및 GitHub 업로드: {report_filename}")
+                except subprocess.CalledProcessError:
+                    st.success(f"✅ 리포트 저장 완료: {report_filename}")
                 
             except Exception as e:
                 st.warning(f"⚠️ 자동 저장 실패: {e}")

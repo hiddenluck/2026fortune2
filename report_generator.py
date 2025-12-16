@@ -1078,8 +1078,52 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             </div>
         </section>
 
+        <!-- ==================== 3. 상세 분석 섹션 ==================== -->
+        <section id="details">
+            <h2 class="section-title"><i class="fas fa-layer-group"></i> 상세 분석</h2>
+            <div id="detailsContent">
+                <!-- JavaScript에서 렌더링 -->
+            </div>
+        </section>
+
+        <!-- ==================== 월별 운세 차트 + 월별 가이드 ==================== -->
+        <section id="monthly-chart" class="card no-click">
+            <h2 class="section-title"><i class="fas fa-chart-line"></i> 2026 월별 운세 흐름</h2>
+            <div class="flow-chart-box">
+                <canvas id="monthlyFlowChart"></canvas>
+            </div>
+            
+            <!-- 월별 버튼 -->
+            <div class="month-buttons" id="monthButtons">
+                <!-- JavaScript에서 렌더링 -->
+            </div>
+            
+            <!-- 월별 상세 설명 -->
+            <div class="month-detail-box" id="monthDetailBox">
+                <!-- JavaScript에서 렌더링 -->
+            </div>
+        </section>
+
+        <!-- ==================== Q&A 섹션 ==================== -->
+        <section id="qa" class="card no-click">
+            <h2 class="section-title"><i class="fas fa-question-circle"></i> <span id="qaTitleName">{CUSTOMER_NAME}</span>님이 궁금한 질문</h2>
+            <div id="qaContent">
+                <!-- JavaScript에서 렌더링 -->
+            </div>
+        </section>
+
         <!-- ==================== 4. 프리미엄 섹션 (동적 삽입 마커) ==================== -->
         <!-- PREMIUM_SECTIONS_MARKER -->
+
+        <!-- ==================== 5. 개운법 섹션 ==================== -->
+        <section id="actions">
+            <div class="key-action-box">
+                <h3>🎯 2026 실속 솔루션</h3>
+                <ul class="key-action-list" id="actionsList">
+                    <!-- JavaScript에서 렌더링 -->
+                </ul>
+            </div>
+        </section>
 
         <!-- ==================== 최종 메시지 ==================== -->
         <section class="final-message-card" id="finalMessage">
@@ -1089,36 +1133,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             </p>
         </section>
         
-        <!-- ==================== 프리미엄 유도 섹션 (블러 처리) ==================== -->
-        <section class="premium-promo-section" style="margin: 40px 0; padding: 30px; background: linear-gradient(135deg, rgba(255, 126, 95, 0.05) 0%, rgba(255, 209, 188, 0.05) 100%); border-radius: 20px; border: 2px solid #FFD1BC; position: relative;">
-            <div style="filter: blur(5px); opacity: 0.6; pointer-events: none;">
-                <h2 style="text-align: center; color: #FF7E5F; font-size: 1.8rem; margin-bottom: 10px;">
-                    <i class="fas fa-crown"></i> 2026 희구소 신년운세 서비스 전용
-                </h2>
-                <p style="text-align: center; font-size: 1.1rem; color: #666; margin-bottom: 25px;">
-                    2026년 한 해의 길잡이가 되는 나만의 자세한 분석 보고서는<br>아래 링크에서 확인하세요
-                </p>
-            </div>
-            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
-                <a href="https://litt.ly/hiddenlucky/sale/PsIuTXE" target="_blank" style="
-                    display: inline-block;
-                    padding: 15px 35px;
-                    background: #FF7E5F;
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 30px;
-                    font-weight: bold;
-                    font-size: 1.1rem;
-                    box-shadow: 0 4px 15px rgba(255, 126, 95, 0.3);
-                    transition: all 0.3s ease;
-                " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                    자세한 운 확인하기
-                </a>
-            </div>
-        </section>
-        
         <!-- ==================== 하단 링크 섹션 ==================== -->
         <section class="footer-links">
+            <a href="https://litt.ly/hiddenlucky" target="_blank" class="footer-link-btn primary">
+                <i class="fas fa-comments"></i> 1:1 깊은 상담 요청하기
+            </a>
             <a href="https://www.instagram.com/hiddenluck_lab" target="_blank" class="footer-link-btn secondary">
                 <i class="fab fa-instagram"></i> 희구소 인스타그램
             </a>
@@ -1633,8 +1652,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     },
                     scales: {
                         y: {
-                            beginAtZero: true,
-                            min: 0,
+                            beginAtZero: false,
+                            min: 40,
                             max: 100,
                             ticks: {
                                 stepSize: 10,
@@ -1981,24 +2000,19 @@ def _extract_report_data(data: Dict) -> Dict:
 
 
 # ============================================================
-# 📊 무료 리포트 생성 함수 (5개 기본 섹션)
+# 📊 기본 HTML 생성 헬퍼 함수 (공통 사용)
 # ============================================================
 
-def generate_free_report_html(data: Dict) -> str:
+def _generate_base_html(data: Dict) -> str:
     """
-    무료 기본 HTML 리포트 생성 (5개 기본 섹션만)
-    - 사주 명식 (컬러풀 + 십신 클릭 설명)
-    - 나의 스탯 변화 (레이더 차트)
-    - 핵심 요약
-    - 상세 분석
-    - 월별 운세 (그래프 + 월 클릭 상세 설명)
-    - 개운법
+    기본 HTML 템플릿에 데이터를 주입하는 내부 헬퍼 함수
+    무료/프리미엄 버전 모두에서 공통으로 사용
     
     Args:
         data: report_package_data (manse + analysis)
     
     Returns:
-        완성된 HTML 문자열
+        데이터가 주입된 기본 HTML 문자열
     """
     # 1. 데이터 추출
     manse = data.get('manse', {})
@@ -2031,26 +2045,102 @@ def generate_free_report_html(data: Dict) -> str:
     # JavaScript 데이터 주입
     html = html.replace('{REPORT_DATA_JSON}', report_data_json)
     
+    return html
+
+
+# ============================================================
+# 📊 무료 리포트 생성 함수 (5개 기본 섹션)
+# ============================================================
+
+def generate_free_report_html(data: Dict) -> str:
+    """
+    무료 기본 HTML 리포트 생성 (5개 기본 섹션만)
+    - 사주 명식 (컬러풀 + 십신 클릭 설명)
+    - 인생의 흐름 (대운/세운)
+    - 나의 스탯 변화 (레이더 차트)
+    - 핵심 요약
+    - 최종 메시지
+    + 프리미엄 유도 섹션
+    
+    제거되는 섹션:
+    - 상세 분석
+    - 월별 운세 차트
+    - Q&A
+    - 개운법
+    
+    Args:
+        data: report_package_data (manse + analysis)
+    
+    Returns:
+        완성된 HTML 문자열
+    """
+    # 1. 기본 HTML 생성
+    html = _generate_base_html(data)
+    
     # 프리미엄 섹션 마커 제거 (무료 버전)
     html = html.replace('<!-- PREMIUM_SECTIONS_MARKER -->', '')
     
-    # 무료 버전: 일부 섹션 제거 및 JavaScript 함수 비활성화
-    # 제거할 섹션들
-    html = html.replace('<section id="details">', '<section id="details" style="display:none;">')
-    html = html.replace('<section id="monthly-chart"', '<section id="monthly-chart" style="display:none;"')
-    html = html.replace('<section id="qa"', '<section id="qa" style="display:none;"')
-    html = html.replace('<section id="actions">', '<section id="actions" style="display:none;">')
+    # ============================================================
+    # 🔒 무료 버전 전용 수정 - 프리미엄 섹션 제거 및 유도 섹션 추가
+    # ============================================================
+    import re
     
-    # JavaScript 함수 호출 비활성화 (무료 버전만)
-    html = html.replace('renderDetails();', '// renderDetails();')
-    html = html.replace('renderMonthlyChart();', '// renderMonthlyChart();')
-    html = html.replace('renderMonthlyGuide();', '// renderMonthlyGuide();')
-    html = html.replace('renderQA();', '// renderQA();')
-    html = html.replace('renderActions();', '// renderActions();')
+    # 1. 제거할 섹션들 (상세 분석, 월별 차트, Q&A, 개운법)
+    html = re.sub(r'<section id="details">.*?</section>', '', html, flags=re.DOTALL)
+    html = re.sub(r'<section id="monthly-chart".*?</section>', '', html, flags=re.DOTALL)
+    html = re.sub(r'<section id="qa".*?</section>', '', html, flags=re.DOTALL)
+    html = re.sub(r'<section id="actions">.*?</section>', '', html, flags=re.DOTALL)
     
-    # 1:1 상담 버튼 제거 (무료 버전)
-    html = html.replace('<a href="https://litt.ly/hiddenlucky" target="_blank" class="footer-link-btn primary">', 
-                       '<a href="https://litt.ly/hiddenlucky" target="_blank" class="footer-link-btn primary" style="display:none;">')
+    # 2. 1:1 상담 버튼 제거
+    html = re.sub(r'<a href="https://litt.ly/hiddenlucky"[^>]*>.*?</a>', '', html, flags=re.DOTALL)
+    
+    # 3. JavaScript 렌더링 함수 호출 제거 (renderDetails, renderMonthlyChart, renderMonthlyGuide, renderQA, renderActions)
+    html = html.replace('renderDetails();', '// renderDetails(); // 무료 버전 비활성화')
+    html = html.replace('renderMonthlyChart();', '// renderMonthlyChart(); // 무료 버전 비활성화')
+    html = html.replace('renderMonthlyGuide();', '// renderMonthlyGuide(); // 무료 버전 비활성화')
+    html = html.replace('renderQA();', '// renderQA(); // 무료 버전 비활성화')
+    html = html.replace('renderActions();', '// renderActions(); // 무료 버전 비활성화')
+    
+    # 4. 프리미엄 유도 섹션 추가 (final-message 섹션 다음에)
+    premium_promo = '''
+        <!-- 🔒 프리미엄 유도 섹션 -->
+        <section class="premium-promo" style="margin: 40px 0; padding: 30px; background: linear-gradient(135deg, rgba(255,126,95,0.1), rgba(255,209,188,0.1)); border-radius: 20px; border: 2px solid #FFD1BC;">
+            <h2 style="text-align: center; color: #FF7E5F; font-family: 'Gowun Batang', serif; margin-bottom: 20px;">
+                <i class="fas fa-crown"></i> 2026 희구소 신년운세 서비스 전용
+            </h2>
+            <p style="text-align: center; margin: 20px 0; font-size: 1.1rem; line-height: 1.8; color: #666;">
+                2026년 한 해의 길잡이가 되는 나만의 자세한 분석 보고서는<br>
+                아래 링크에서 확인하세요
+            </p>
+            <div style="text-align: center; margin-top: 25px;">
+                <a href="https://litt.ly/hiddenlucky/sale/PsIuTXE" target="_blank" style="
+                    display: inline-block;
+                    padding: 15px 35px;
+                    background: linear-gradient(135deg, #FF7E5F, #FF9966);
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 30px;
+                    font-weight: bold;
+                    font-size: 1.1rem;
+                    box-shadow: 0 4px 15px rgba(255, 126, 95, 0.4);
+                    transition: all 0.3s ease;">
+                    <i class="fas fa-star"></i> 자세한 운 확인하기
+                </a>
+            </div>
+            <div style="text-align: center; margin-top: 15px; font-size: 0.9rem; color: #999;">
+                ✨ 상세 분석 · 월별 가이드 · Q&A · 개운법 포함
+            </div>
+        </section>
+'''
+    
+    # final-message 섹션 다음에 프리미엄 유도 섹션 삽입
+    final_message_pattern = r'(<!-- ==================== 최종 메시지 ====================.*?</section>)'
+    match = re.search(final_message_pattern, html, flags=re.DOTALL)
+    if match:
+        html = html.replace(match.group(0), match.group(0) + premium_promo)
+    else:
+        # 폴백: </main> 직전에 삽입
+        html = html.replace('</main>', premium_promo + '\n        </main>')
     
     return html
 
@@ -2073,9 +2163,20 @@ def generate_report_html(data: Dict) -> str:
 def generate_premium_report_html(data: Dict) -> str:
     """
     유료 프리미엄 리포트 생성 (전체 11개 섹션)
-    - 기존 섹션 5개 + STEP 1 신규 6개 프리미엄 섹션
+    - 모든 기본 섹션 + 6개 프리미엄 섹션
     
-    프리미엄 섹션:
+    기본 섹션 (모두 포함):
+    1. 사주 명식
+    2. 인생의 흐름 (대운/세운)
+    3. 나의 스탯 변화
+    4. 핵심 요약
+    5. 상세 분석
+    6. 월별 운세 차트
+    7. Q&A
+    8. 개운법
+    9. 최종 메시지
+    
+    프리미엄 추가 섹션:
     1. 재물운 타이밍 관리
     2. 비겁 부족 보완 미션
     3. 죄책감 해소 가이드
@@ -2089,30 +2190,8 @@ def generate_premium_report_html(data: Dict) -> str:
     Returns:
         완성된 HTML 문자열
     """
-    # 1. 프리미엄용 전체 HTML 생성 (모든 섹션 활성화)
-    manse = data.get('manse', {})
-    analysis = data.get('analysis', {})
-    
-    # 헤더 정보
-    day_master = manse.get('day_master', '甲')
-    customer_name = manse.get('customer_name', '고객')
-    summary_card = analysis.get('summary_card', {})
-    main_keyword = summary_card.get('keyword', '당신의 2026년')
-    final_message = analysis.get('final_message', '논리적인 시스템만이 당신의 추진력을 완성합니다.')
-    key_message_2026 = analysis.get('key_message_2026', summary_card.get('action_item', '2026년, 당신의 운명이 펼쳐집니다.'))
-    
-    # JavaScript용 데이터
-    report_data = _extract_report_data(data)
-    report_data_json = json.dumps(report_data, ensure_ascii=False, indent=2)
-    
-    # HTML 템플릿에 데이터 주입
-    base_html = HTML_TEMPLATE
-    base_html = base_html.replace('{DAY_MASTER}', day_master)
-    base_html = base_html.replace('{CUSTOMER_NAME}', customer_name)
-    base_html = base_html.replace('{MAIN_KEYWORD}', main_keyword)
-    base_html = base_html.replace('{FINAL_MESSAGE}', final_message)
-    base_html = base_html.replace('{KEY_MESSAGE_2026}', key_message_2026)
-    base_html = base_html.replace('{REPORT_DATA_JSON}', report_data_json)
+    # 1. 기본 HTML 생성 (모든 섹션 포함)
+    base_html = _generate_base_html(data)
     
     # 2. 프리미엄 섹션 데이터 추출
     analysis = data.get('analysis', {})
