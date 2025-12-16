@@ -773,6 +773,60 @@ def render_app():
             st.markdown("#### 💎 프리미엄 리포트")
             premium_html = generate_premium_report_html(st.session_state.report_package_data)
             
+            # GitHub API를 통해 reports 폴더에 자동 저장
+            import requests
+            import base64
+            
+            try:
+                github_token = st.secrets.get("GITHUB_TOKEN", "")
+                if github_token:
+                    repo_owner = "hiddenluck"
+                    repo_name = "2026fortune2"
+                    headers = {
+                        "Authorization": f"token {github_token}",
+                        "Accept": "application/vnd.github.v3+json"
+                    }
+                    
+                    # 카운터 읽기
+                    counter_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/reports/counter.txt"
+                    counter_resp = requests.get(counter_url, headers=headers)
+                    
+                    if counter_resp.status_code == 200:
+                        counter_data = counter_resp.json()
+                        counter = int(base64.b64decode(counter_data['content']).decode('utf-8').strip())
+                        counter_sha = counter_data['sha']
+                    else:
+                        counter = 1
+                        counter_sha = None
+                    
+                    # 리포트 저장
+                    report_filename = f"{counter:04d}_{name}_2026.html"
+                    file_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/reports/{report_filename}"
+                    file_content = base64.b64encode(premium_html.encode('utf-8')).decode('utf-8')
+                    
+                    file_resp = requests.put(file_url, headers=headers, json={
+                        "message": f"Add report: {report_filename}",
+                        "content": file_content,
+                        "branch": "main"
+                    })
+                    
+                    if file_resp.status_code in [200, 201]:
+                        # 카운터 업데이트
+                        new_counter = f"{counter + 1:04d}"
+                        counter_payload = {
+                            "message": f"Update counter to {new_counter}",
+                            "content": base64.b64encode(new_counter.encode('utf-8')).decode('utf-8'),
+                            "branch": "main"
+                        }
+                        if counter_sha:
+                            counter_payload["sha"] = counter_sha
+                        requests.put(counter_url, headers=headers, json=counter_payload)
+                        st.success(f"✅ 리포트 저장 완료: {report_filename}")
+                    else:
+                        st.warning(f"⚠️ GitHub 저장 실패: {file_resp.status_code}")
+            except Exception as e:
+                st.warning(f"⚠️ 자동 저장 실패: {e}")
+            
             st.download_button(
                 label="💎 프리미엄 리포트 다운로드 (₩29,000)",
                 data=premium_html.encode('utf-8'),
