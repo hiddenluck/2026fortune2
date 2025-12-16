@@ -270,13 +270,43 @@ def render_app():
                 b_minute = st.selectbox("분", list(range(0, 60)), index=15, format_func=lambda x: f"{x:02d}분")
             target_time = dt_time(b_hour, b_minute)
             
-            # 참고용 시진 표시
+            # 참고용 시진 표시 - 명리학적 시진 계산 (30분 경계)
+            # 자시: 23:30~01:30, 축시: 01:30~03:30, 인시: 03:30~05:30, 묘시: 05:30~07:30 ...
             sijin_names = ["자시", "축시", "인시", "묘시", "진시", "사시", "오시", "미시", "신시", "유시", "술시", "해시"]
-            if b_hour == 23 or b_hour == 0:
-                current_sijin = "자시(子時)"
-            else:
-                sijin_idx = (b_hour + 1) // 2
-                current_sijin = f"{sijin_names[sijin_idx]}({['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'][sijin_idx]}時)"
+            sijin_hanja = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
+            
+            # 시간을 분으로 변환하여 정확한 시진 계산
+            total_minutes = b_hour * 60 + b_minute
+            
+            # 명리학적 시진 경계 (30분 기준)
+            # 자시 시작: 23:30 (1410분) ~ 익일 01:30 (90분)
+            # 각 시진은 2시간 (120분) 간격
+            if total_minutes >= 1410 or total_minutes < 90:  # 23:30 ~ 01:30
+                sijin_idx = 0  # 자시
+            elif total_minutes < 210:  # 01:30 ~ 03:30
+                sijin_idx = 1  # 축시
+            elif total_minutes < 330:  # 03:30 ~ 05:30
+                sijin_idx = 2  # 인시
+            elif total_minutes < 450:  # 05:30 ~ 07:30
+                sijin_idx = 3  # 묘시
+            elif total_minutes < 570:  # 07:30 ~ 09:30
+                sijin_idx = 4  # 진시
+            elif total_minutes < 690:  # 09:30 ~ 11:30
+                sijin_idx = 5  # 사시
+            elif total_minutes < 810:  # 11:30 ~ 13:30
+                sijin_idx = 6  # 오시
+            elif total_minutes < 930:  # 13:30 ~ 15:30
+                sijin_idx = 7  # 미시
+            elif total_minutes < 1050:  # 15:30 ~ 17:30
+                sijin_idx = 8  # 신시
+            elif total_minutes < 1170:  # 17:30 ~ 19:30
+                sijin_idx = 9  # 유시
+            elif total_minutes < 1290:  # 19:30 ~ 21:30
+                sijin_idx = 10  # 술시
+            else:  # 21:30 ~ 23:30
+                sijin_idx = 11  # 해시
+            
+            current_sijin = f"{sijin_names[sijin_idx]}({sijin_hanja[sijin_idx]}時)"
             st.caption(f"📍 해당 시진: {current_sijin}")
         
         st.markdown("---")
@@ -512,45 +542,7 @@ def render_app():
             )
             
             st.markdown("---")
-            st.markdown("#### 2️⃣ 상세 분석")
-            
-            edited_wealth = st.text_area(
-                "💰 재물운 분석",
-                value=st.session_state.report_package_data['analysis']['detailed_analysis']['wealth_luck'],
-                height=150,
-                key='edit_wealth'
-            )
-            
-            edited_career = st.text_area(
-                "💼 경력/커리어 분석",
-                value=st.session_state.report_package_data['analysis']['detailed_analysis']['career_luck'],
-                height=150,
-                key='edit_career'
-            )
-            
-            edited_love = st.text_area(
-                "❤️ 사랑/가족 관계 분석",
-                value=st.session_state.report_package_data['analysis']['detailed_analysis']['love_family_luck'],
-                height=150,
-                key='edit_love'
-            )
-            
-            edited_change = st.text_area(
-                "🔄 변화/이동 운세",
-                value=st.session_state.report_package_data['analysis']['detailed_analysis']['change_luck'],
-                height=150,
-                key='edit_change'
-            )
-            
-            edited_health = st.text_area(
-                "🏥 건강 조언",
-                value=st.session_state.report_package_data['analysis']['detailed_analysis']['health_advice'],
-                height=150,
-                key='edit_health'
-            )
-            
-            st.markdown("---")
-            st.markdown("#### 3️⃣ 고객 맞춤 분석")
+            st.markdown("#### 2️⃣ 고객 맞춤 분석")
             
             edited_customer_wealth = st.text_area(
                 "💰 재물운 (고객용)",
@@ -581,6 +573,115 @@ def render_app():
             )
             
             st.markdown("---")
+            st.markdown("#### 3️⃣ 프리미엄 가이드 (개운법/마인드셋업/관계가이드/에너지달력/디지털부적)")
+            
+            # 개운법 (weakness_missions)
+            weakness_data = st.session_state.report_package_data['analysis'].get('weakness_missions', {})
+            edited_weakness_element = st.text_area(
+                "🍀 개운법 - 부족 요소 설명",
+                value=weakness_data.get('missing_element', ''),
+                height=80,
+                key='edit_weakness_element'
+            )
+            
+            # 월별 미션은 접을 수 있는 형태로
+            with st.expander("📅 월별 개운 미션 (12개월)", expanded=False):
+                monthly_missions = weakness_data.get('monthly_missions', {})
+                edited_missions = {}
+                for m in range(1, 13):
+                    edited_missions[str(m)] = st.text_input(
+                        f"{m}월 미션",
+                        value=monthly_missions.get(str(m), ''),
+                        key=f'edit_mission_{m}'
+                    )
+            
+            st.markdown("---")
+            
+            # 마인드셋업 (psychological_relief)
+            psych_data = st.session_state.report_package_data['analysis'].get('psychological_relief', {})
+            edited_guilt_pattern = st.text_area(
+                "🧠 마인드셋업 - 심리 패턴",
+                value=psych_data.get('guilt_pattern', ''),
+                height=80,
+                key='edit_guilt_pattern'
+            )
+            edited_reframing = st.text_area(
+                "🔄 리프레이밍 (새로운 관점)",
+                value=psych_data.get('reframing', ''),
+                height=100,
+                key='edit_reframing'
+            )
+            edited_affirmation = st.text_area(
+                "💫 확언 (Affirmation)",
+                value=psych_data.get('affirmation', ''),
+                height=80,
+                key='edit_affirmation'
+            )
+            
+            st.markdown("---")
+            
+            # 관계가이드 (relationship_strategy)
+            rel_data = st.session_state.report_package_data['analysis'].get('relationship_strategy', {})
+            edited_pattern_name = st.text_input(
+                "💑 관계가이드 - 관계 패턴명",
+                value=rel_data.get('pattern_name', ''),
+                key='edit_pattern_name'
+            )
+            edited_boundary_guide = st.text_area(
+                "🚧 경계 설정 가이드",
+                value=rel_data.get('boundary_guide', ''),
+                height=100,
+                key='edit_boundary_guide'
+            )
+            edited_family_energy = st.text_area(
+                "👨‍👩‍👧 가족 에너지",
+                value=rel_data.get('family_energy', ''),
+                height=100,
+                key='edit_family_energy'
+            )
+            
+            st.markdown("---")
+            
+            # 에너지달력 (rest_calendar)
+            rest_data = st.session_state.report_package_data['analysis'].get('rest_calendar', {})
+            burnout_months = rest_data.get('burnout_months', [])
+            edited_burnout_months = st.text_input(
+                "🔥 에너지달력 - 번아웃 주의 월 (쉼표로 구분)",
+                value=', '.join(map(str, burnout_months)),
+                key='edit_burnout_months'
+            )
+            edited_rest_activities = st.text_area(
+                "🧘 휴식 활동 추천",
+                value=rest_data.get('rest_activities', ''),
+                height=100,
+                key='edit_rest_activities'
+            )
+            
+            st.markdown("---")
+            
+            # 디지털부적 (digital_amulet)
+            amulet_data = st.session_state.report_package_data['analysis'].get('digital_amulet', {})
+            col_a1, col_a2 = st.columns(2)
+            with col_a1:
+                edited_yongsin = st.text_input(
+                    "🔮 디지털부적 - 용신 오행",
+                    value=amulet_data.get('yongsin_element', ''),
+                    key='edit_yongsin'
+                )
+            with col_a2:
+                edited_amulet_color = st.color_picker(
+                    "🎨 부적 색상",
+                    value=amulet_data.get('image_color', '#A2C2E0'),
+                    key='edit_amulet_color'
+                )
+            edited_amulet_quote = st.text_area(
+                "📜 부적 문구",
+                value=amulet_data.get('quote', ''),
+                height=80,
+                key='edit_amulet_quote'
+            )
+            
+            st.markdown("---")
             st.markdown("#### 4️⃣ 최종 메시지")
             
             edited_final_message = st.text_area(
@@ -600,18 +701,48 @@ def render_app():
                 st.session_state.report_package_data['analysis']['summary_card']['risk'] = edited_risk
                 st.session_state.report_package_data['analysis']['summary_card']['action_item'] = edited_action_item
                 
-                # 상세 분석 업데이트
-                st.session_state.report_package_data['analysis']['detailed_analysis']['wealth_luck'] = edited_wealth
-                st.session_state.report_package_data['analysis']['detailed_analysis']['career_luck'] = edited_career
-                st.session_state.report_package_data['analysis']['detailed_analysis']['love_family_luck'] = edited_love
-                st.session_state.report_package_data['analysis']['detailed_analysis']['change_luck'] = edited_change
-                st.session_state.report_package_data['analysis']['detailed_analysis']['health_advice'] = edited_health
-                
                 # 고객 맞춤 분석 업데이트
                 st.session_state.report_package_data['analysis']['customer_analysis']['wealth_luck'] = edited_customer_wealth
                 st.session_state.report_package_data['analysis']['customer_analysis']['career_luck'] = edited_customer_career
                 st.session_state.report_package_data['analysis']['customer_analysis']['love_family_luck'] = edited_customer_love
                 st.session_state.report_package_data['analysis']['customer_analysis']['change_luck'] = edited_customer_change
+                
+                # 프리미엄 가이드 업데이트 - 개운법
+                st.session_state.report_package_data['analysis']['weakness_missions'] = {
+                    'missing_element': edited_weakness_element,
+                    'monthly_missions': edited_missions
+                }
+                
+                # 프리미엄 가이드 업데이트 - 마인드셋업
+                st.session_state.report_package_data['analysis']['psychological_relief'] = {
+                    'guilt_pattern': edited_guilt_pattern,
+                    'reframing': edited_reframing,
+                    'affirmation': edited_affirmation
+                }
+                
+                # 프리미엄 가이드 업데이트 - 관계가이드
+                st.session_state.report_package_data['analysis']['relationship_strategy'] = {
+                    'pattern_name': edited_pattern_name,
+                    'boundary_guide': edited_boundary_guide,
+                    'family_energy': edited_family_energy
+                }
+                
+                # 프리미엄 가이드 업데이트 - 에너지달력
+                try:
+                    burnout_list = [int(m.strip()) for m in edited_burnout_months.split(',') if m.strip()]
+                except:
+                    burnout_list = []
+                st.session_state.report_package_data['analysis']['rest_calendar'] = {
+                    'burnout_months': burnout_list,
+                    'rest_activities': edited_rest_activities
+                }
+                
+                # 프리미엄 가이드 업데이트 - 디지털부적
+                st.session_state.report_package_data['analysis']['digital_amulet'] = {
+                    'yongsin_element': edited_yongsin,
+                    'image_color': edited_amulet_color,
+                    'quote': edited_amulet_quote
+                }
                 
                 # 최종 메시지 업데이트
                 st.session_state.report_package_data['analysis']['final_message'] = edited_final_message
