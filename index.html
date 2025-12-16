@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>희구소 Hidden Luck Lab</title>
+    
+    <!-- 폰트: 우아한 명조체(Gowun Batang) & 모던한 고딕(Pretendard) -->
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    
+    <!-- 아이콘 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            /* 브랜드 컬러 팔레트: 차분한 파스텔 */
+            --glass-bg: rgba(255, 255, 255, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --glass-shadow: 0 8px 32px 0 rgba(100, 100, 100, 0.05); /* 그림자도 연하게 */
+            --text-color: #5D4D40; /* 짙은 갈색 텍스트 */
+            --accent-color: #FF8F7D; /* 부드러운 코랄 포인트 */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            /* 민트 - 피치 - 베이지 - 옐로우 파스텔 그라디언트 */
+            background: linear-gradient(-45deg, #B5EAD7, #FFDAC1, #FDF5E6, #FFF5BA);
+            background-size: 400% 400%;
+            animation: gradientBG 20s ease infinite; /* 속도를 더 느리게 해서 차분하게 */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        /* 배경 애니메이션 */
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 배경에 떠다니는 신비로운 오브젝트 (색상 조정) */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px); /* 블러를 줄여서 좀 더 형태감 있게 */
+            z-index: 0;
+            animation: float 12s infinite ease-in-out;
+            opacity: 0.6; /* 은은하게 */
+        }
+        
+        /* 민트/그린 계열 오브브 */
+        .orb-1 { 
+            width: 350px; 
+            height: 350px; 
+            background: #C7F9CC; 
+            top: -50px; 
+            left: -50px; 
+            animation-delay: 0s; 
+        }
+        
+        /* 피치/웜 계열 오브 */
+        .orb-2 { 
+            width: 400px; 
+            height: 400px; 
+            background: #FFD3B6; 
+            bottom: -80px; 
+            right: -80px; 
+            animation-delay: -6s; 
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-40px) scale(1.05); }
+        }
+
+        /* 메인 컨테이너 (유리 카드) */
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 480px;
+            min-height: 90vh;
+            margin: 20px;
+            /* 배경을 좀 더 하얗고 불투명하게 해서 가독성 확보 */
+            background: rgba(255, 255, 255, 0.35);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: var(--glass-shadow);
+            padding: 40px 30px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 프로필 영역 */
+        .profile-section {
+            margin-bottom: 30px;
+        }
+
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 10px 20px rgba(166, 142, 133, 0.1);
+            object-fit: cover;
+            margin-bottom: 20px;
+            /* 펄스 애니메이션 제거하고 정적인 고급스러움 유지 */
+        }
+
+        /* 텍스트 로고 스타일 */
+        .brand-heading {
+            font-family: 'Gowun Batang', serif;
+            font-size: 1.8rem; /* 크기 조정 */
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #4A3B32; /* 짙은 갈색 */
+            letter-spacing: -1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .bio-text {
+            font-family: 'Gowun Batang', serif;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 40px;
+            color: #6B5B4E; /* 조금 더 부드러운 브라운 */
+            font-weight: 600;
+        }
+
+        /* 링크 버튼 영역 */
+        .links {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .link-btn {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 25px;
+            background: rgba(255, 255, 255, 0.6); /* 버튼 배경을 더 밝게 */
+            border: 1px solid #fff;
+            border-radius: 20px; /* 더 둥글게 */
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 700;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            backdrop-filter: blur(5px);
+            overflow: visible;
+            z-index: 1;
+        }
+
+        .link-btn:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+
+        .btn-icon {
+            font-size: 1.4rem;
+            width: 30px;
+            text-align: center;
+            color: var(--accent-color);
+            position: relative;
+            z-index: 2;
+        }
+
+        .btn-text {
+            flex-grow: 1;
+            text-align: center;
+            margin-right: 30px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 강조 버튼 (세 번째) */
+        .link-btn.highlight {
+            background: rgba(255, 255, 255, 0.85);
+            border: 2px solid #FFDAC1; /* 피치색 테두리 */
+            color: #D67D65;
+        }
+        
+        .shine-layer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border-radius: 18px; /* 버튼 radius에 맞춤 */
+            overflow: hidden;
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        .shine-layer::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,218,193,0.4), transparent); /* 웜톤 샤인 */
+            transform: skewX(-25deg);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            100% { left: 200%; }
+        }
+
+        .tag-new {
+            position: absolute;
+            top: -12px;
+            right: 15px;
+            background: #FF8F7D; /* 코랄 핑크 */
+            color: white;
+            font-size: 0.75rem;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-weight: 800;
+            box-shadow: 0 4px 10px rgba(255, 143, 125, 0.3);
+            animation: bounce 2s infinite;
+            z-index: 10;
+        }
+        
+        .tag-new::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px 5px 0;
+            border-style: solid;
+            border-color: #FF8F7D transparent transparent transparent;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-5px);}
+            60% {transform: translateY(-3px);}
+        }
+
+        footer {
+            margin-top: auto;
+            padding-top: 40px;
+            font-size: 0.8rem;
+            color: rgba(93, 77, 64, 0.6);
+        }
+
+        @media (max-width: 400px) {
+            .container { padding: 30px 20px; }
+            .brand-heading { font-size: 1.6rem; }
+            .link-btn { padding: 15px 20px; font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 배경 효과: 민트 & 피치 오브 -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="container">
+        <!-- 프로필 및 로고 영역 -->
+        <div class="profile-section">
+            <img src="https://i.ibb.co/67XjdSMD/4.png" alt="희구소 프로필" class="avatar">
+            <br>
+            <!-- 네모 로고 이미지를 텍스트 헤딩으로 교체 -->
+            <h1 class="brand-heading">희구소 : Hidden Luck Lab</h1>
+            <p class="bio-text">
+                좋은 운에도, 나쁜 운에도<br>
+                언제나 길은 있고, 당신의 때는 와요.<br>
+                당신의 숨겨진 행운까지 찾아냅니다.
+            </p>
+        </div>
+
+        <!-- 링크 버튼 영역 -->
+        <div class="links">
+            <!-- 버튼 1: 1:1 문의 -->
+            <a href="https://open.kakao.com/me/hiddenlucklab" target="_blank" class="link-btn">
+                <i class="fas fa-comments btn-icon"></i>
+                <span class="btn-text">1:1 문의하기</span>
+            </a>
+
+            <!-- 버튼 2: 단체 톡방 -->
+            <a href="https://open.kakao.com/o/pZmJWO6h" target="_blank" class="link-btn">
+                <i class="fas fa-users btn-icon"></i>
+                <span class="btn-text">사주 수다 & 질문방</span>
+            </a>
+
+            <!-- 버튼 3: 신년 운세 (강조) -->
+            <a href="https://litt.ly/hiddenlucky/sale/PsIuTXE" target="_blank" class="link-btn highlight">
+                <span class="tag-new">EVENT</span>
+                <span class="shine-layer"></span>
+                
+                <i class="fas fa-scroll btn-icon"></i>
+                <span class="btn-text">2026 신년 운세 / 이벤트 특가</span>
+            </a>
+        </div>
+
+        <!-- 푸터 -->
+        <footer>
+            © 2025 Hidden Luck Lab. All rights reserved.
+        </footer>
+    </div>
+
+</body>
+</html>
