@@ -1652,8 +1652,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     },
                     scales: {
                         y: {
-                            beginAtZero: false,
-                            min: 40,
+                            beginAtZero: true,
+                            min: 0,
                             max: 100,
                             ticks: {
                                 stepSize: 10,
@@ -2102,33 +2102,56 @@ def generate_free_report_html(data: Dict) -> str:
     html = html.replace('renderActions();', '// renderActions(); // 무료 버전 비활성화')
     
     # 4. 프리미엄 유도 섹션 추가 (final-message 섹션 다음에)
+    # 블러 처리된 더미 콘텐츠 위에 프리미엄 안내 텍스트 표시
     premium_promo = '''
-        <!-- 🔒 프리미엄 유도 섹션 -->
-        <section class="premium-promo" style="margin: 40px 0; padding: 30px; background: linear-gradient(135deg, rgba(255,126,95,0.1), rgba(255,209,188,0.1)); border-radius: 20px; border: 2px solid #FFD1BC;">
-            <h2 style="text-align: center; color: #FF7E5F; font-family: 'Gowun Batang', serif; margin-bottom: 20px;">
-                <i class="fas fa-crown"></i> 2026 희구소 신년운세 서비스 전용
-            </h2>
-            <p style="text-align: center; margin: 20px 0; font-size: 1.1rem; line-height: 1.8; color: #666;">
-                2026년 한 해의 길잡이가 되는 나만의 자세한 분석 보고서는<br>
-                아래 링크에서 확인하세요
-            </p>
-            <div style="text-align: center; margin-top: 25px;">
-                <a href="https://litt.ly/hiddenlucky/sale/PsIuTXE" target="_blank" style="
-                    display: inline-block;
-                    padding: 15px 35px;
-                    background: linear-gradient(135deg, #FF7E5F, #FF9966);
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 30px;
-                    font-weight: bold;
-                    font-size: 1.1rem;
-                    box-shadow: 0 4px 15px rgba(255, 126, 95, 0.4);
-                    transition: all 0.3s ease;">
-                    <i class="fas fa-star"></i> 자세한 운 확인하기
-                </a>
+        <!-- 🔒 프리미엄 유도 섹션 - 블러 효과 + 안내 텍스트 -->
+        <section class="premium-promo" style="margin: 40px 0; position: relative;">
+            <!-- 안내 텍스트 (블러 위에 표시) -->
+            <div style="text-align: center; padding: 30px 20px; background: linear-gradient(135deg, rgba(255,126,95,0.15), rgba(255,209,188,0.15)); border-radius: 20px 20px 0 0; border: 2px solid #FFD1BC; border-bottom: none;">
+                <h2 style="color: #FF7E5F; font-family: 'Gowun Batang', serif; margin-bottom: 15px; font-size: 1.4rem;">
+                    <i class="fas fa-crown"></i> 희구소 신년운세 서비스 전용
+                </h2>
+                <p style="margin: 0; font-size: 1.1rem; line-height: 1.8; color: #666;">
+                    2026년 한 해의 길잡이가 되는 나만의 자세한 분석 보고서는<br>
+                    아래 링크에서 확인하세요
+                </p>
             </div>
-            <div style="text-align: center; margin-top: 15px; font-size: 0.9rem; color: #999;">
-                ✨ 상세 분석 · 월별 가이드 · Q&A · 개운법 포함
+            
+            <!-- 블러 처리된 더미 콘텐츠 -->
+            <div style="position: relative; overflow: hidden; border-radius: 0 0 20px 20px; border: 2px solid #FFD1BC; border-top: none;">
+                <!-- 블러 배경 -->
+                <div style="filter: blur(8px); opacity: 0.6; padding: 30px; background: #fff;">
+                    <div style="background: rgba(255,126,95,0.1); padding: 20px; border-radius: 15px; margin-bottom: 15px;">
+                        <h3 style="color: #FF7E5F; margin-bottom: 10px;">📊 상세 분석</h3>
+                        <p style="color: #666; line-height: 1.6;">재물운, 직업운, 애정운, 건강운에 대한 심층 분석이 여기에 표시됩니다. 당신만을 위한 맞춤형 조언과 구체적인 행동 지침을 확인하세요.</p>
+                    </div>
+                    <div style="background: rgba(255,126,95,0.1); padding: 20px; border-radius: 15px; margin-bottom: 15px;">
+                        <h3 style="color: #FF7E5F; margin-bottom: 10px;">📅 월별 상세 가이드</h3>
+                        <p style="color: #666; line-height: 1.6;">매월 운세 흐름과 주의사항, 행운의 날짜와 컬러까지 상세하게 안내해 드립니다.</p>
+                    </div>
+                    <div style="background: rgba(255,126,95,0.1); padding: 20px; border-radius: 15px;">
+                        <h3 style="color: #FF7E5F; margin-bottom: 10px;">❓ 맞춤 Q&A</h3>
+                        <p style="color: #666; line-height: 1.6;">투자, 이직, 연애 등 궁금한 질문에 대한 사주 기반 답변을 확인하세요.</p>
+                    </div>
+                </div>
+                
+                <!-- CTA 버튼 (블러 위에 표시) -->
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 10;">
+                    <a href="https://litt.ly/hiddenlucky/sale/PsIuTXE" target="_blank" style="
+                        display: inline-block;
+                        padding: 18px 40px;
+                        background: linear-gradient(135deg, #FF7E5F, #FF9966);
+                        color: white;
+                        text-decoration: none;
+                        border-radius: 30px;
+                        font-weight: bold;
+                        font-size: 1.2rem;
+                        box-shadow: 0 6px 20px rgba(255, 126, 95, 0.5);
+                        transition: all 0.3s ease;">
+                        <i class="fas fa-lock-open"></i> 자세한 운 확인하기
+                    </a>
+                    <p style="margin-top: 12px; font-size: 0.9rem; color: #888; text-shadow: 0 0 10px #fff;">✨ 상세 분석 · 월별 가이드 · Q&A · 개운법 포함</p>
+                </div>
             </div>
         </section>
 '''

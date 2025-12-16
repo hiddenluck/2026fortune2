@@ -775,18 +775,18 @@ def render_app():
             
             # 생성 번호 읽기 및 증가
             import os
-            import subprocess
+            from pathlib import Path
             
-            # 올바른 절대 경로 (프로젝트 루트의 reports 폴더)
-            reports_dir = "/home/user/webapp/reports"
-            counter_file = f"{reports_dir}/counter.txt"
-            project_root = "/home/user/webapp"
+            # 현재 스크립트 위치 기준 상대 경로 사용 (Streamlit Cloud 호환)
+            script_dir = Path(__file__).parent.resolve()
+            reports_dir = script_dir / "reports"
+            counter_file = reports_dir / "counter.txt"
             
             try:
                 # reports 폴더 생성 (없으면)
-                os.makedirs(reports_dir, exist_ok=True)
+                reports_dir.mkdir(parents=True, exist_ok=True)
                 
-                if os.path.exists(counter_file):
+                if counter_file.exists():
                     with open(counter_file, 'r') as f:
                         counter = int(f.read().strip())
                 else:
@@ -797,7 +797,7 @@ def render_app():
                     
                 # 파일명 생성 (생성번호_고객명_2026.html)
                 report_filename = f"{counter:04d}_{name}_2026.html"
-                report_path = f"{reports_dir}/{report_filename}"
+                report_path = reports_dir / report_filename
                 
                 # 프리미엄 HTML 저장
                 with open(report_path, 'w', encoding='utf-8') as f:
@@ -807,15 +807,7 @@ def render_app():
                 with open(counter_file, 'w') as f:
                     f.write(f"{counter + 1:04d}")
                 
-                # Git에 추가하고 커밋/푸시
-                try:
-                    subprocess.run(['git', 'add', report_path], cwd=project_root, check=True, capture_output=True)
-                    subprocess.run(['git', 'add', counter_file], cwd=project_root, check=True, capture_output=True)
-                    subprocess.run(['git', 'commit', '-m', f'Add report: {report_filename}'], cwd=project_root, capture_output=True)
-                    subprocess.run(['git', 'push', 'origin', 'main'], cwd=project_root, capture_output=True)
-                    st.success(f"✅ 리포트 저장 및 GitHub 업로드: {report_filename}")
-                except subprocess.CalledProcessError:
-                    st.success(f"✅ 리포트 저장 완료: {report_filename}")
+                st.success(f"✅ 리포트 저장 완료: {report_filename}")
                 
             except Exception as e:
                 st.warning(f"⚠️ 자동 저장 실패: {e}")
