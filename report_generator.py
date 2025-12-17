@@ -1603,7 +1603,25 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         // 월별 운세 차트 렌더링
         function renderMonthlyChart() {
             const ctx = document.getElementById('monthlyFlowChart');
-            if (!ctx || !REPORT_DATA.monthly_flow) return;
+            const chartContainer = ctx ? ctx.parentElement : null;
+            
+            // 🔧 에러 처리: monthly_flow가 없거나 에러가 있으면 에러 메시지 표시
+            if (!ctx) return;
+            
+            if (!REPORT_DATA.monthly_flow || REPORT_DATA.monthly_flow_error) {
+                const errorMsg = REPORT_DATA.monthly_flow_error || '[점수계산오류] 월별 점수를 계산할 수 없습니다.';
+                if (chartContainer) {
+                    chartContainer.innerHTML = `
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 280px; background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%); border-radius: 16px; padding: 20px; text-align: center;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                            <div style="font-size: 16px; font-weight: 600; color: #c53030; margin-bottom: 8px;">월별 점수 계산 오류</div>
+                            <div style="font-size: 14px; color: #742a2a; line-height: 1.5;">${errorMsg}</div>
+                            <div style="font-size: 12px; color: #9b2c2c; margin-top: 12px;">생년월일시 정보를 다시 확인해주세요.</div>
+                        </div>
+                    `;
+                }
+                return;
+            }
             
             const monthlyFlow = REPORT_DATA.monthly_flow;
             const labels = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
@@ -1946,8 +1964,9 @@ def _extract_report_data(data: Dict) -> Dict:
     # Q&A 데이터
     qa_section = analysis.get('qa_section', {})
     
-    # 월별 운세 데이터
-    monthly_flow = analysis.get('monthly_flow', [70, 75, 80, 65, 85, 50, 60, 70, 95, 80, 75, 70])
+    # 월별 운세 데이터 (기본값 제거 - 에러 시 명시적 표시)
+    monthly_flow = analysis.get('monthly_flow')  # None일 수 있음
+    monthly_flow_error = analysis.get('monthly_flow_error')  # 에러 메시지
     
     # 월별 가이드 데이터 (NEW - 월 클릭 시 상세 설명)
     monthly_guide = analysis.get('monthly_guide', {})
@@ -1992,6 +2011,7 @@ def _extract_report_data(data: Dict) -> Dict:
         },
         'details': details,
         'monthly_flow': monthly_flow,
+        'monthly_flow_error': monthly_flow_error,  # NEW: 에러 메시지
         'monthly_guide': monthly_guide,  # NEW
         'radar_chart': radar_chart,      # NEW
         'qa': qa_section,
@@ -2338,7 +2358,9 @@ if __name__ == "__main__":
                 'a2': '9월, 11월, 12월이 재물운이 상승하는 시기입니다.'
             },
             'final_message': '논리적인 시스템만이 당신의 추진력을 완성합니다.',
-            'monthly_flow': [70, 75, 80, 65, 85, 50, 60, 70, 95, 80, 75, 70],
+            # 🔧 테스트 데이터: monthly_flow는 실제 계산값 사용 (하드코딩 제거)
+            'monthly_flow': None,  # 실제 분석 시 calculate_monthly_flow_scores()로 계산됨
+            'monthly_flow_error': None,
             # NEW: 레이더 차트 데이터
             'radar_chart': {
                 'labels': ['추진력', '수익화', '협상력', '안정성', '리더십'],

@@ -66,53 +66,114 @@ MONTHLY_GANJI_2026 = {
     12: ('辛', '丑'),  # 신축월
 }
 
-def calculate_monthly_flow_scores(manse_info: Dict) -> List[int]:
+def calculate_monthly_flow_scores(manse_info: Dict) -> Dict:
     """
     사주 데이터와 saju_data_updated.py의 테이블을 사용하여 
     2026년 월별 운세 점수를 계산합니다.
     
-    동일한 사주에 대해 항상 동일한 점수를 반환합니다.
+    [유연 모드] 부분 실패 시 에러 메시지 반환, 전체 실패 방지
     
     Parameters:
         manse_info: 사주 명식 정보 (일간, 월지, 일지 포함)
     
     Returns:
-        List[int]: 1월~12월 점수 (각 0~100 범위)
+        Dict: {
+            'success': bool,
+            'scores': List[int] or None,
+            'error': str or None,
+            'error_details': Dict or None  # 디버깅용 상세 정보
+        }
     """
-    ilgan = manse_info.get('일주', ['', ''])[0]  # 일간 (천간)
-    wolji = manse_info.get('월주', ['', ''])[1]  # 월지 (지지)
-    ilji = manse_info.get('일주', ['', ''])[1]   # 일지 (지지)
+    # 데이터 추출 시도
+    try:
+        ilju = manse_info.get('일주', ['', ''])
+        wolju = manse_info.get('월주', ['', ''])
+        
+        # 문자열/리스트 모두 처리
+        if isinstance(ilju, str):
+            ilgan = ilju[0] if len(ilju) > 0 else ''
+            ilji = ilju[1] if len(ilju) > 1 else ''
+        else:
+            ilgan = ilju[0] if len(ilju) > 0 else ''
+            ilji = ilju[1] if len(ilju) > 1 else ''
+        
+        if isinstance(wolju, str):
+            wolji = wolju[1] if len(wolju) > 1 else ''
+        else:
+            wolji = wolju[1] if len(wolju) > 1 else ''
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'scores': None,
+            'error': f'[데이터추출오류] 사주 데이터 형식이 올바르지 않습니다.',
+            'error_details': {'exception': str(e), 'manse_info_keys': list(manse_info.keys()) if manse_info else None}
+        }
     
-    if not ilgan or not wolji or not ilji:
-        # 데이터 없으면 기본값 반환
-        return [65, 70, 75, 60, 80, 55, 65, 70, 85, 75, 70, 65]
+    # 필수 데이터 검증
+    missing_fields = []
+    if not ilgan:
+        missing_fields.append('일간(日干)')
+    if not wolji:
+        missing_fields.append('월지(月支)')
+    if not ilji:
+        missing_fields.append('일지(日支)')
     
+    if missing_fields:
+        return {
+            'success': False,
+            'scores': None,
+            'error': f'[필수데이터누락] {', '.join(missing_fields)}이(가) 없습니다. 생년월일시를 다시 확인해주세요.',
+            'error_details': {'ilgan': ilgan, 'wolji': wolji, 'ilji': ilji}
+        }
+    
+    # 점수 계산
     scores = []
-    is_sin_or_jeong = ilgan in ['辛', '丁']
+    calculation_errors = []
     
     for month in range(1, 13):
-        month_cheongan, month_jiji = MONTHLY_GANJI_2026[month]
-        
-        # saju_data_updated.py의 calculate_total_luck_score 사용
-        sa_ju_data = {
-            '일간': ilgan,
-            '월지': wolji,
-            '일지': ilji
-        }
-        luck_data = {
-            '천간': month_cheongan,
-            '지지': month_jiji,
-            '운의종류': '월운'
-        }
-        
-        result = calculate_total_luck_score(sa_ju_data, luck_data)
-        total_score = result.get('total', 60)
-        
-        # 점수를 정수로 변환 (35~95 범위로 조정)
-        adjusted_score = int(min(95, max(35, total_score)))
-        scores.append(adjusted_score)
+        try:
+            month_cheongan, month_jiji = MONTHLY_GANJI_2026[month]
+            
+            sa_ju_data = {
+                '일간': ilgan,
+                '월지': wolji,
+                '일지': ilji
+            }
+            luck_data = {
+                '천간': month_cheongan,
+                '지지': month_jiji,
+                '운의종류': '월운'
+            }
+            
+            result = calculate_total_luck_score(sa_ju_data, luck_data)
+            
+            # total 키 검증
+            if 'total' not in result:
+                calculation_errors.append(f'{month}월: total 키 없음')
+                scores.append(50)  # 계산 실패 시 중립값
+                continue
+                
+            total_score = result['total']
+            
+            # 점수 범위 조정 (35~95)
+            adjusted_score = int(min(95, max(35, total_score)))
+            scores.append(adjusted_score)
+            
+        except Exception as e:
+            calculation_errors.append(f'{month}월: {str(e)}')
+            scores.append(50)  # 개별 월 계산 실패 시 중립값
     
-    return scores
+    # 결과 반환
+    if calculation_errors:
+        print(f"⚠️ [점수계산] 일부 월 계산 오류: {calculation_errors}")
+    
+    return {
+        'success': True,
+        'scores': scores,
+        'error': None,
+        'error_details': {'calculation_warnings': calculation_errors} if calculation_errors else None
+    }
 
 
 def _format_monthly_scores_for_prompt(monthly_scores: List[int]) -> str:
@@ -593,7 +654,18 @@ def analyze_ai_report(manse_info: Dict, daewoon_info: Dict, full_q: str, profile
     pattern_analysis_str = format_patterns_for_prompt(matched_patterns)
     
     # 3. [NEW] 테이블 기반 월별 점수 계산 (AI에게 전달하여 일관된 가이드 작성 유도)
-    monthly_scores = calculate_monthly_flow_scores(manse_info)
+    score_result = calculate_monthly_flow_scores(manse_info)
+    
+    # 점수 계산 실패 시 에러 정보 저장
+    monthly_score_error = None
+    if score_result['success']:
+        monthly_scores = score_result['scores']
+    else:
+        monthly_scores = None
+        monthly_score_error = score_result['error']
+        print(f"❌ [월별점수] {monthly_score_error}")
+        if score_result.get('error_details'):
+            print(f"   상세: {score_result['error_details']}")
 
     # 4. 최종 프롬프트 생성 (get_final_ai_prompt는 이미 정의되어 있음)
     prompt = get_final_ai_prompt(
@@ -606,7 +678,7 @@ def analyze_ai_report(manse_info: Dict, daewoon_info: Dict, full_q: str, profile
         clinical_data_str=clinical_data_str,
         pattern_analysis_str=pattern_analysis_str,  # NEW: 패턴 분석 결과 추가
         profile_data=profile_data,  # NEW: 고객 프로필 데이터 추가
-        monthly_scores=monthly_scores  # NEW: 테이블 기반 월별 점수 전달
+        monthly_scores=monthly_scores  # NEW: 테이블 기반 월별 점수 전달 (None일 수 있음)
     )
     
     # 4. AI API 호출 및 응답 처리 (ResourceExhausted 대비 재시도 로직)
@@ -699,8 +771,16 @@ def analyze_ai_report(manse_info: Dict, daewoon_info: Dict, full_q: str, profile
             }
         
         # 🔧 월별 점수를 테이블 기반으로 덮어쓰기 (AI 생성 점수 대체)
-        monthly_scores = calculate_monthly_flow_scores(manse_info)
-        result_json['monthly_flow'] = monthly_scores
+        score_result = calculate_monthly_flow_scores(manse_info)
+        if score_result['success']:
+            monthly_scores = score_result['scores']
+            result_json['monthly_flow'] = monthly_scores
+            result_json['monthly_flow_error'] = None
+        else:
+            monthly_scores = None
+            result_json['monthly_flow'] = None
+            result_json['monthly_flow_error'] = score_result['error']
+            print(f"⚠️ [월별점수오류] {score_result['error']}")
         
         # 🔧 프리미엄 섹션 동적 생성 (사주 기반 맞춤 컨텐츠)
         result_json = ensure_premium_sections(result_json, ilgan, manse_info, monthly_scores)
@@ -711,7 +791,13 @@ def analyze_ai_report(manse_info: Dict, daewoon_info: Dict, full_q: str, profile
         # 🔧 API 호출 실패 시에도 기본 구조 반환 (프리미엄 섹션은 채워짐)
         print(f"❌ API 호출 실패: {type(e).__name__} - {str(e)}")
         
-        monthly_scores = calculate_monthly_flow_scores(manse_info)
+        score_result = calculate_monthly_flow_scores(manse_info)
+        if score_result['success']:
+            monthly_scores = score_result['scores']
+            monthly_flow_error = None
+        else:
+            monthly_scores = None
+            monthly_flow_error = score_result['error']
         
         result_json = {
             "summary_card": {
@@ -738,6 +824,7 @@ def analyze_ai_report(manse_info: Dict, daewoon_info: Dict, full_q: str, profile
             "final_message": "일시적인 연결 문제가 발생했습니다. 월별 점수와 프리미엄 가이드는 정상적으로 확인하실 수 있습니다.",
             "radar_chart": {"labels": ["추진력", "수익화", "협상력", "안정성", "리더십"], "current": [7, 6, 6, 7, 6], "future": [7, 7, 7, 7, 7]},
             "monthly_flow": monthly_scores,
+            "monthly_flow_error": monthly_flow_error,
             "monthly_guide": {str(i): {"title": "분석 중", "wealth": "-", "career": "-", "love": "-", "focus": "-", "caution": "-", "action": "-"} for i in range(1, 13)},
             "key_actions": ["월별 점수 그래프를 참고하세요", "취약월에는 휴식을 취하세요", "용신 기운을 보충하세요"]
         }

@@ -278,7 +278,11 @@ def get_cheongan_score(ilgan: str, un_cheongan: str) -> float:
     천간 원본 점수 조회 (일간 vs 운천간)
     반환: 원본 점수 (-10 ~ 100), 기본값 50
     """
-    return CHUNGAN_SCORES_LOOKUP.get((ilgan, un_cheongan), 50.0)
+    score = CHUNGAN_SCORES_LOOKUP.get((ilgan, un_cheongan))
+    if score is None:
+        print(f"⚠️ [천간점수] 테이블에 없는 조합: 일간={ilgan}, 운천간={un_cheongan} → 기본값 50 사용")
+        return 50.0
+    return score
 
 def get_jiji_score(ilji: str, un_jiji: str) -> float:
     """
@@ -286,7 +290,11 @@ def get_jiji_score(ilji: str, un_jiji: str) -> float:
     반환: 원본 점수 (-20 ~ 120), 기본값 50
     """
     key = ilji + un_jiji
-    return JIJI_SCORES_LOOKUP.get(key, 50.0)
+    score = JIJI_SCORES_LOOKUP.get(key)
+    if score is None:
+        print(f"⚠️ [지지점수] 테이블에 없는 조합: 일지={ilji}, 운지지={un_jiji} → 기본값 50 사용")
+        return 50.0
+    return score
 
 def get_johu_score(wolji: str, un_jiji: str) -> float:
     """
@@ -294,14 +302,22 @@ def get_johu_score(wolji: str, un_jiji: str) -> float:
     반환: 원본 점수 (0 ~ 100), 기본값 50
     """
     key = wolji + un_jiji
-    return JOHU_SCORES_LOOKUP.get(key, 50.0)
+    score = JOHU_SCORES_LOOKUP.get(key)
+    if score is None:
+        print(f"⚠️ [조후점수] 테이블에 없는 조합: 월지={wolji}, 운지지={un_jiji} → 기본값 50 사용")
+        return 50.0
+    return score
 
 def get_sinjeong_score(un_jiji: str) -> float:
     """
     신정조후 원본 점수 조회 (운지지만 참조, 辛/丁 일간 전용)
     반환: 원본 점수 (35 ~ 75), 기본값 60
     """
-    return SINJEONG_JOHU_SCORES_LOOKUP.get(un_jiji, 60.0)
+    score = SINJEONG_JOHU_SCORES_LOOKUP.get(un_jiji)
+    if score is None:
+        print(f"⚠️ [신정조후] 테이블에 없는 운지지: {un_jiji} → 기본값 60 사용")
+        return 60.0
+    return score
 
 
 # --------------------------------------------------------------------------------
