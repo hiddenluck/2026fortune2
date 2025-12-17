@@ -26,6 +26,9 @@ try:
     )
     # Tier 2: HTML 템플릿 및 데이터 주입 함수
     from report_generator import generate_report_html, generate_free_report_html, generate_premium_report_html
+    
+    # 🔧 금쪽이 분석 엔진 import
+    from saju_analysis_engine import run_full_analysis
 
 
     # API 키 로드 (로컬 환경 지원)
@@ -106,21 +109,150 @@ def render_expert_analysis(details: Dict, qa: Dict, final_message: str):
     st.markdown(f"_{final_message.replace('\\n', '\n')}_")
 
 
-def render_customer_analysis(customer_details: Dict):
-    """고객용 쉬운 말 분석을 Streamlit에 표시합니다."""
-    # (기존 UI 렌더링 로직 유지)
-    sections = [
-        ("💰 재물운 (쉬운 말)", 'wealth_luck'), ("👔 직업/사업운 (쉬운 말)", 'career_luck'), 
-        ("💖 애정/가정운 (쉬운 말)", 'love_family_luck'), ("🏠 변동운 (쉬운 말)", 'change_luck'),
-    ]
-    st.markdown("### 5-1. 🍀 고객용 쉬운 말 분석 (HTML 리포트용)")
+def render_geumjjok_analysis(manse_info: Dict, daewoon_info: Dict):
+    """금쪽이 9단계 분석 결과를 표 형태로 표시합니다."""
+    st.markdown("### 3. 🔍 금쪽이 사주 분석 (9단계 알고리즘)")
     
-    for title, key in sections:
-        content = customer_details.get(key, "분석 데이터 없음")
-        st.markdown(f"{title}")
-        st.text(content.replace('\\n', '\n')) 
-        st.markdown("---")
-    st.markdown("</div>", unsafe_allow_html=True)
+    try:
+        # 금쪽이 분석 실행
+        result = run_full_analysis(manse_info, daewoon_info, TARGET_YEAR)
+        
+        if result.get('error'):
+            st.error(f"분석 오류: {result['error']}")
+            return
+        
+        # 1단계: 오행 분포
+        oheng = result.get('step1_oheng', {})
+        oheng_count = oheng.get('count', {})
+        oheng_str = ' '.join([f"{k}{v}" for k, v in oheng_count.items()])
+        missing = ', '.join(oheng.get('missing', [])) or '없음'
+        excess = ', '.join(oheng.get('excess', [])) or '없음'
+        
+        # 2단계: 일주 분석
+        ilju = result.get('step2_ilju', {})
+        ilju_str = ilju.get('ilju', '')
+        ilgan_oheng = ilju.get('ilgan_oheng', '')
+        ilgan_yinyang = ilju.get('ilgan_yinyang', '')
+        birth_season = ilju.get('birth_season', '')
+        wolji = manse_info.get('월주', '')[1] if len(manse_info.get('월주', '')) > 1 else ''
+        
+        # 3단계: 격국
+        geokguk = result.get('step3_geokguk', {})
+        geokguk_name = geokguk.get('geokguk_name', '')
+        geokguk_type = geokguk.get('geokguk_type', '')
+        
+        # 4단계: 신강/신약 + 용신
+        gangwak = result.get('step4_gangwak', {})
+        is_strong = '신강' if gangwak.get('is_strong') else '신약'
+        strength_score = gangwak.get('strength_score', 0)
+        
+        yongsin_data = result.get('step4_yongsin', {})
+        yongsin = yongsin_data.get('yongsin', '')
+        huisin = yongsin_data.get('huisin', '')
+        gisin = yongsin_data.get('gisin', '')
+        yongsin_reason = yongsin_data.get('reason', '')
+        
+        # 5단계: 통근
+        tonggeun = result.get('step5_tonggeun', {})
+        tonggeun_count = tonggeun.get('tonggeun_count', 0)
+        has_root = '있음' if tonggeun.get('has_root') else '없음'
+        
+        # 6단계: 십신
+        sipsin = result.get('step6_sipsin', {})
+        dominant_sipsin = sipsin.get('dominant_sipsin', '')
+        sipsin_stats = sipsin.get('sipsin_stats', {})
+        missing_groups = ', '.join(sipsin.get('missing_sipsin_groups', [])) or '없음'
+        
+        # 7단계: 특수 변수
+        special = result.get('step7_special', {})
+        sinsal_list = [s.get('name', '') for s in special.get('sinsal', [])]
+        sinsal_str = ', '.join(sinsal_list) or '없음'
+        hch_list = [f"{h.get('type', '')}({h.get('jiji', '')})" for h in special.get('hapchunghyung', [])]
+        hch_str = ', '.join(hch_list[:3]) or '없음'  # 최대 3개만 표시
+        
+        # 8단계: 대운/세운
+        timeline = result.get('step8_timeline', {})
+        sewoon = timeline.get('sewoon', {})
+        sewoon_ganji = sewoon.get('ganji', '')
+        sewoon_score = sewoon.get('score', 0)
+        daewoon = timeline.get('daewoon', {})
+        daewoon_ganji = daewoon.get('ganji', '')
+        
+        # 요약
+        summary = result.get('summary', {})
+        
+        # 표 형태로 렌더링
+        st.markdown(f"""
+        <style>
+        .geumjjok-table {{ width: 100%; border-collapse: collapse; font-size: 0.95rem; }}
+        .geumjjok-table th {{ background: #2E7D32; color: white; padding: 10px; text-align: left; width: 15%; }}
+        .geumjjok-table td {{ padding: 10px; border-bottom: 1px solid #e0e0e0; background: #FAFAFA; }}
+        .geumjjok-table tr:hover td {{ background: #E8F5E9; }}
+        .step-badge {{ background: #43A047; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; margin-right: 5px; }}
+        .highlight {{ color: #D32F2F; font-weight: bold; }}
+        .yongsin-box {{ background: #E3F2FD; padding: 8px 12px; border-radius: 8px; display: inline-block; margin-top: 5px; }}
+        </style>
+        
+        <table class="geumjjok-table">
+        <tr>
+            <th><span class="step-badge">1단계</span> 오행분포</th>
+            <td>{oheng_str} &nbsp;|&nbsp; <b>누락:</b> {missing} &nbsp;|&nbsp; <b>과다:</b> {excess}</td>
+        </tr>
+        <tr>
+            <th><span class="step-badge">2단계</span> 일주분석</th>
+            <td><b>일주:</b> {ilju_str} &nbsp;|&nbsp; <b>일간오행:</b> {ilgan_oheng}({ilgan_yinyang}) &nbsp;|&nbsp; <b>계절:</b> {birth_season}({wolji}월)</td>
+        </tr>
+        <tr>
+            <th><span class="step-badge">3단계</span> 격국</th>
+            <td><b>{geokguk_name}</b> ({geokguk_type})</td>
+        </tr>
+        <tr>
+            <th><span class="step-badge">4단계</span> 신강/신약</th>
+            <td><span class="highlight">{is_strong}</span> (점수: {strength_score}점)</td>
+        </tr>
+        <tr>
+            <th><span class="step-badge">4단계+</span> 용신</th>
+            <td>
+                <div class="yongsin-box">
+                    <b>용신:</b> <span class="highlight">{yongsin}</span> &nbsp;|&nbsp; 
+                    <b>희신:</b> {huisin} &nbsp;|&nbsp; 
+                    <b>기신:</b> {gisin}
+                </div>
+                <br><small>📌 {yongsin_reason}</small>
+            </td>
+        </tr>
+        <tr>
+            <th><span class="step-badge">5단계</span> 통근</th>
+            <td><b>통근 수:</b> {tonggeun_count}개 &nbsp;|&nbsp; <b>뿌리:</b> {has_root}</td>
+        </tr>
+        <tr>
+            <th><span class="step-badge">6단계</span> 십신분석</th>
+            <td><b>주요 십신:</b> {dominant_sipsin} &nbsp;|&nbsp; <b>누락 그룹:</b> {missing_groups}</td>
+        </tr>
+        <tr>
+            <th><span class="step-badge">7단계</span> 특수변수</th>
+            <td><b>신살:</b> {sinsal_str} &nbsp;|&nbsp; <b>합충형:</b> {hch_str}</td>
+        </tr>
+        <tr>
+            <th><span class="step-badge">8단계</span> 운세흐름</th>
+            <td><b>{TARGET_YEAR}세운:</b> {sewoon_ganji} ({sewoon_score}점) &nbsp;|&nbsp; <b>현재대운:</b> {daewoon_ganji}</td>
+        </tr>
+        </table>
+        
+        <p style="margin-top: 15px; padding: 10px; background: #FFF8E1; border-radius: 8px; font-size: 0.9rem;">
+        💡 <b>9단계(종합해석)</b>는 아래 AI 분석에서 확인하세요.
+        </p>
+        """, unsafe_allow_html=True)
+        
+        # AI 추가 분석 필요 항목 표시
+        ai_needed = result.get('ai_needed', [])
+        if ai_needed:
+            st.warning(f"⚠️ AI 추가 검증 권장: {', '.join(ai_needed)}")
+            
+    except Exception as e:
+        st.error(f"금쪽이 분석 중 오류: {e}")
+        import traceback
+        st.code(traceback.format_exc())
 
 
 def render_saju_pillars(manse_info: Dict, ten_gods_array: List[Dict], ui_eng: UIEngineHelper):
@@ -475,18 +607,8 @@ def render_app():
         
         st.markdown("---")
 
-        # --- 3. AI 분석 요약 (운영자 핵심 정보) ---
-        st.markdown("### 3. AI 분석 요약 (운영자 핵심 정보)")
-        summary = result_json.get('summary_card', {})
-        st.markdown(f"""
-        <div class='summary-block'>
-            <h4>✨ 2026년 핵심 테마 (고객 카드 문구)</h4>
-            <p><strong>키워드:</strong> {summary.get('keyword', '분석 불가')}</p>
-            <p><strong>Best Month:</strong> {summary.get('best_month', 'N/A')}</p>
-            <p><strong>Risk:</strong> {summary.get('risk', 'N/A')}</p>
-            <p><strong>Action:</strong> {summary.get('action_item', 'N/A')}</p>
-        </div>
-        """, unsafe_allow_html=True)
+        # --- 3. 🔍 금쪽이 사주 분석 (9단계 알고리즘) ---
+        render_geumjjok_analysis(manse_info, dw)
         
         st.markdown("---")
 
@@ -498,16 +620,9 @@ def render_app():
         render_expert_analysis(details, qa_sec, final_msg)
         
         st.markdown("---")
-
-        # --- 5. 고객용 쉬운 말 분석 렌더링 추가 ---
-        customer_details = result_json.get('customer_analysis', {})
-        render_customer_analysis(customer_details)
-
-        st.markdown("---")
         
-        # --- 5-2. AI 분석 결과 검토 및 수정 (신규) ---
-        st.markdown("---")
-        st.markdown("### 5-2. ✏️ AI 분석 결과 검토 및 수정")
+        # --- 5. AI 분석 결과 검토 및 수정 ---
+        st.markdown("### 5. ✏️ AI 분석 결과 검토 및 수정")
         st.info("💡 **고객 리포트 출력 전에 AI 분석 내용을 검토하고 수정할 수 있습니다.**")
         
         with st.expander("📝 텍스트 내용 수정하기 (클릭하여 펼치기)", expanded=False):
