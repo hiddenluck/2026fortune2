@@ -1160,20 +1160,28 @@ def ensure_premium_sections(result_json: Dict, ilgan: str, manse_info: Dict, mon
     missing = oheng_analysis['missing']
     weak = oheng_analysis['weak']
     
+    # 한자 → 한글 오행 변환 (run_full_analysis는 한자 반환)
+    hanja_to_kr = {'木': '목', '火': '화', '土': '토', '金': '금', '水': '수'}
+    
     # 부족한 오행 결정 (없는 오행 > 1개만 있는 오행 > 용신)
     if missing:
-        target_element = missing[0]
+        raw_element = missing[0]
+        target_element = hanja_to_kr.get(raw_element, raw_element)  # 한자면 변환, 아니면 그대로
         element_kr_name = {'목': '시작의 힘', '화': '열정의 힘', '토': '안정의 힘', '금': '결단의 힘', '수': '지혜의 힘'}
         weakness_desc = f"사주에 {target_element}({element_kr_name.get(target_element, '')})이 부족하여 보완이 필요합니다."
     elif weak:
-        target_element = weak[0]
+        raw_element = weak[0]
+        target_element = hanja_to_kr.get(raw_element, raw_element)  # 한자면 변환, 아니면 그대로
         element_kr_name = {'목': '시작의 힘', '화': '열정의 힘', '토': '안정의 힘', '금': '결단의 힘', '수': '지혜의 힘'}
         weakness_desc = f"사주에 {target_element}({element_kr_name.get(target_element, '')})이 약하여 보완이 필요합니다."
     else:
         target_element = yongsin
         weakness_desc = f"용신인 {target_element} 기운을 강화하면 전체 운기가 상승합니다."
     
-    missions = _generate_weakness_missions(target_element if missing else '', weak)
+    # weak 리스트도 한글로 변환
+    weak_kr = [hanja_to_kr.get(w, w) for w in weak] if weak else []
+    
+    missions = _generate_weakness_missions(target_element if missing else '', weak_kr)
     
     result_json['weakness_missions'] = {
         "missing_element": weakness_desc,
@@ -1233,6 +1241,41 @@ def ensure_premium_sections(result_json: Dict, ilgan: str, manse_info: Dict, mon
         "yongsin_element": yongsin,
         "quote": yongsin_quotes.get(yongsin, "당신 안에 이미 답이 있습니다."),
         "image_color": yongsin_color
+    }
+    
+    # === 8. luck_boost_2026 (2026년 맞춤 개운법) - 항상 덮어쓰기 ===
+    # 2026년 병오(丙午)년 = 火(화) 에너지
+    ilgan_boost_title = {
+        '甲': '목(木) 일간이 화(火)를 만나 확장과 표현의 해',
+        '乙': '유연한 목(木)이 화(火)로 개화하는 해',
+        '丙': '화(火)가 만나 열정이 폭발하는 해',
+        '丁': '섬세한 화(火)가 더 밝게 빛나는 해',
+        '戊': '토(土)가 화(火)의 지원을 받아 기반이 견고해지는 해',
+        '己': '토(土)가 화(火)로 활력을 얻는 해',
+        '庚': '금(金)이 화(火)의 단련을 받아 강해지는 해',
+        '辛': '섬세한 금(金)이 화(火)로 빛나는 해',
+        '壬': '수(水)가 화(火)와 균형을 찾는 해',
+        '癸': '깊은 수(水)가 화(火)의 온기를 받는 해'
+    }
+    
+    # 일간별 2026년 맞춤 개운법 액션
+    ilgan_boost_actions = {
+        '甲': ['새로운 프로젝트나 사업 시작에 좋은 해입니다', '창의적인 아이디어를 적극 표현하세요', '리더십을 발휘할 기회를 잡으세요'],
+        '乙': ['협력 관계를 통한 성장에 집중하세요', '유연하게 변화에 적응하면서 기회를 잡으세요', '예술적 감각을 활용한 활동이 도움됩니다'],
+        '丙': ['열정을 조절하며 에너지를 분산하지 마세요', '밝은 이미지로 주변에 긍정적 영향력을 발휘하세요', '과열된 감정을 식히는 휴식도 필요합니다'],
+        '丁': ['전문성을 깊이 있게 키우는 해입니다', '섬세한 분석과 계획이 성공의 열쇠입니다', '작지만 확실한 성취를 쌓아가세요'],
+        '戊': ['안정적인 기반 구축에 집중하세요', '신뢰를 쌓는 관계 형성이 중요합니다', '부동산이나 자산 관련 기회에 주목하세요'],
+        '己': ['실속 있는 수익화에 집중하세요', '주변과의 조화로운 관계 유지가 중요합니다', '건강 관리와 규칙적인 생활 리듬을 유지하세요'],
+        '庚': ['결단력 있게 불필요한 것을 정리하세요', '전문성을 높이는 교육이나 자격증 취득을 권합니다', '단호한 판단이 필요한 순간이 옵니다'],
+        '辛': ['품질과 가치를 높이는 전략이 유효합니다', '자기 관리와 이미지 개선에 투자하세요', '세련된 취향을 살린 활동이 도움됩니다'],
+        '壬': ['다양한 정보와 인맥을 활용하세요', '유연하게 상황에 대처하는 지혜가 필요합니다', '수면과 휴식의 질을 높이세요'],
+        '癸': ['직감을 믿되 데이터로 검증하세요', '깊이 있는 학습과 연구에 좋은 해입니다', '내면의 목소리에 귀 기울이는 시간을 가지세요']
+    }
+    
+    result_json['luck_boost_2026'] = {
+        "title": ilgan_boost_title.get(ilgan, '2026년 맞춤 개운법'),
+        "description": f"2026년 병오(丙午)년의 火 에너지와 {ilgan} 일간의 조화를 분석한 맞춤 개운법입니다. 용신 {yongsin} 기운을 보충하며 아래 실천 사항을 참고하세요.",
+        "actions": ilgan_boost_actions.get(ilgan, ['월별 운세를 참고하세요', '용신 기운을 보충하세요', '건강 관리에 신경 쓰세요'])
     }
     
     print(f"✅ [Premium] 생성완료 - 용신:{yongsin}, 부적색상:{yongsin_color}")
