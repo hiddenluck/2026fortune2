@@ -804,42 +804,67 @@ def _analyze_oheng_distribution(manse_info: Dict) -> Dict:
 
 def _calculate_yongsin(manse_info: Dict) -> str:
     """
-    사주 원국 기반 용신(用神)을 산출합니다.
+    사주 원국 기반 용신(用神)을 정확하게 산출합니다.
     
-    핵심 규칙:
-    1. 토(土) 월지(辰戌丑未): 목(木) 선 용신 - 땅을 뚫고 나오는 힘
-    2. 여름 월지(巳午未): 수(水) 우선 - 더위를 식히는 조후
-    3. 겨울 월지(亥子丑): 화(火) 우선 - 추위를 녹이는 조후
-    4. 봄/가을: 일간 생(生)해주는 오행
+    ★ 개선: 단순히 월지만 보지 않고, 실제 오행 분포를 분석하여
+    부족한 기운을 보완하는 방식으로 용신 산출
+    
+    용신 판단 우선순위:
+    1. 조후용신 (계절 조절) - 여름엔 수, 겨울엔 화 (해당 오행이 없을 때만)
+    2. 억부용신 (신강/신약 조절) - 신강이면 설기, 신약이면 생조
+    3. 병약용신 (병이 있으면 약) - 특정 오행 과다 시 억제
+    4. 부족 오행 보충
     
     Returns:
         str: '목', '화', '토', '금', '수' 중 하나
     """
-    wolji = manse_info.get('월주', '')[1] if len(manse_info.get('월주', '')) > 1 else ''
-    ilgan = manse_info.get('일주', '')[0] if len(manse_info.get('일주', '')) > 0 else ''
-    
-    # 토 월지 (辰戌丑未) → 목(木) 선 용신
-    if wolji in ['辰', '戌', '丑', '未']:
-        return '목'
-    
-    # 여름 월지 (巳午未) → 수(水) 선 용신 (조후)
-    if wolji in ['巳', '午']:
-        return '수'
-    
-    # 겨울 월지 (亥子丑) → 화(火) 선 용신 (조후)
-    if wolji in ['亥', '子']:
-        return '화'
-    
-    # 봄/가을 및 기타: 일간 기준 생해주는 오행
-    ilgan_yongsin_default = {
-        '甲': '수', '乙': '수',  # 목을 생하는 수
-        '丙': '목', '丁': '목',  # 화를 생하는 목
-        '戊': '화', '己': '화',  # 토를 생하는 화
-        '庚': '토', '辛': '토',  # 금을 생하는 토
-        '壬': '금', '癸': '금',  # 수를 생하는 금
-    }
-    
-    return ilgan_yongsin_default.get(ilgan, '수')
+    try:
+        # 새로운 분석 엔진 사용
+        from saju_analysis_engine import determine_yongsin, analyze_oheng_distribution, determine_gangwak
+        
+        oheng_dist = analyze_oheng_distribution(manse_info)
+        gangwak = determine_gangwak(manse_info, oheng_dist)
+        yongsin_result = determine_yongsin(manse_info, gangwak, oheng_dist)
+        
+        # 한자 오행을 한글로 변환
+        yongsin_hanja_to_kr = {'木': '목', '火': '화', '土': '토', '金': '금', '水': '수'}
+        return yongsin_hanja_to_kr.get(yongsin_result.yongsin, '수')
+        
+    except ImportError:
+        # fallback: 기존 로직 (saju_analysis_engine 없을 때)
+        wolji = manse_info.get('월주', '')[1] if len(manse_info.get('월주', '')) > 1 else ''
+        ilgan = manse_info.get('일주', '')[0] if len(manse_info.get('일주', '')) > 0 else ''
+        
+        # 먼저 오행 분포 확인
+        oheng_analysis = _analyze_oheng_distribution(manse_info)
+        
+        # 토 월지지만, 목이 이미 많으면 목 용신 X
+        if wolji in ['辰', '戌', '丑', '未']:
+            if oheng_analysis['count'].get('목', 0) < 3:  # 목이 3개 미만일 때만
+                return '목'
+        
+        # 여름 월지 (巳午) → 수(水) 선 용신 (수가 없을 때만)
+        if wolji in ['巳', '午']:
+            if oheng_analysis['count'].get('수', 0) == 0:
+                return '수'
+        
+        # 겨울 월지 (亥子) → 화(火) 선 용신 (화가 없을 때만)
+        if wolji in ['亥', '子']:
+            if oheng_analysis['count'].get('화', 0) == 0:
+                return '화'
+        
+        # 부족한 오행 보충
+        if oheng_analysis['missing']:
+            return oheng_analysis['missing'][0]
+        if oheng_analysis['weak']:
+            return oheng_analysis['weak'][0]
+        
+        # 일간 기준 인성 오행
+        ilgan_yongsin_default = {
+            '甲': '수', '乙': '수', '丙': '목', '丁': '목', '戊': '화',
+            '己': '화', '庚': '토', '辛': '토', '壬': '금', '癸': '금',
+        }
+        return ilgan_yongsin_default.get(ilgan, '수')
 
 
 def _get_sipsin_pattern(manse_info: Dict) -> Dict:
@@ -1040,17 +1065,44 @@ def ensure_premium_sections(result_json: Dict, ilgan: str, manse_info: Dict, mon
     ⚠️ 중요: AI 응답에 있는 프리미엄 섹션 데이터를 무시하고, 
     항상 사주 분석 기반으로 새로 계산합니다. (고정값 문제 해결)
     
+    🔧 2024-12 개선: saju_analysis_engine.py의 정확한 용신 계산 사용
+    - 단순 월지 기반이 아닌, 오행 분포 + 신강/신약 분석 기반
+    - 목이 많은데 목을 용신으로 하는 버그 수정됨
+    
     [로직]:
     1. 개운법(weakness_missions): 원국 오행 분포 분석 → 부족/과다 오행 판단 → 보완 미션 생성
     2. 마인드셋업(psychological_relief): 십성 분포 → 성격 패턴 → 심리적 취약점 대응 문구
     3. 관계가이드(relationship_strategy): 십성 패턴 → 관계 스타일 가이드
     4. 에너지달력(rest_calendar): 월별 점수 → 취약월 식별 → 맞춤 휴식 활동
-    5. 디지털부적(digital_amulet): 월지 기반 용신 산출 → 맞춤 메시지/색상
+    5. 디지털부적(digital_amulet): 정확한 용신 산출 → 맞춤 메시지/색상
     """
     
-    # === 1. 기본 분석 데이터 준비 ===
-    oheng_analysis = _analyze_oheng_distribution(manse_info)
-    yongsin = _calculate_yongsin(manse_info)
+    # === 1. 기본 분석 데이터 준비 (새로운 분석 엔진 사용) ===
+    try:
+        from saju_analysis_engine import run_full_analysis
+        
+        # 전체 분석 실행 (1-8단계)
+        full_analysis = run_full_analysis(manse_info)
+        
+        # 분석 결과에서 필요한 데이터 추출
+        oheng_analysis = full_analysis.get('step1_oheng', {})
+        yongsin_data = full_analysis.get('step4_yongsin', {})
+        yongsin_hanja = yongsin_data.get('yongsin', '水')
+        yongsin_reason = yongsin_data.get('reason', '')
+        
+        # 한자 → 한글 변환
+        yongsin_hanja_to_kr = {'木': '목', '火': '화', '土': '토', '金': '금', '水': '수'}
+        yongsin = yongsin_hanja_to_kr.get(yongsin_hanja, '수')
+        
+        print(f"🔧 [Premium] 새 분석 엔진 사용 - 용신: {yongsin} ({yongsin_reason})")
+        
+    except ImportError:
+        # fallback: 기존 함수 사용
+        oheng_analysis = _analyze_oheng_distribution(manse_info)
+        yongsin = _calculate_yongsin(manse_info)
+        yongsin_reason = ''
+        print(f"🔧 [Premium] 기존 방식 사용 - 용신: {yongsin}")
+    
     sipsin_pattern = _get_sipsin_pattern(manse_info)
     
     # 디버그 출력
