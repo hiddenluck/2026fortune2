@@ -860,6 +860,8 @@ def _analyze_oheng_distribution(manse_info: Dict) -> Dict:
     """
     사주 원국의 오행 분포를 분석하여 부족/과다 오행을 판단합니다.
     
+    🔧 리팩토링: saju_analysis_engine.analyze_oheng_distribution()을 우선 호출
+    
     Returns:
         Dict: {
             'count': {'목': 2, '화': 1, ...},
@@ -868,107 +870,101 @@ def _analyze_oheng_distribution(manse_info: Dict) -> Dict:
             'excess': ['목'],   # 3개 이상 있는 오행
         }
     """
-    # 천간/지지 오행 매핑
-    cheongan_oheng = {
-        '甲': '목', '乙': '목', '丙': '화', '丁': '화', '戊': '토',
-        '己': '토', '庚': '금', '辛': '금', '壬': '수', '癸': '수'
-    }
-    jiji_oheng = {
-        '子': '수', '丑': '토', '寅': '목', '卯': '목', '辰': '토',
-        '巳': '화', '午': '화', '未': '토', '申': '금', '酉': '금',
-        '戌': '토', '亥': '수'
-    }
+    # 한자→한글 변환 맵
+    hanja_to_kr = {'木': '목', '火': '화', '土': '토', '金': '금', '水': '수'}
     
-    oheng_count = {'목': 0, '화': 0, '토': 0, '금': 0, '수': 0}
-    
-    # 4주에서 오행 카운트 (8글자)
-    for pillar_key in ['년주', '월주', '일주', '시주']:
-        pillar = manse_info.get(pillar_key, '')
-        if len(pillar) >= 2:
-            cheongan = pillar[0]
-            jiji = pillar[1]
-            
-            if cheongan in cheongan_oheng:
-                oheng_count[cheongan_oheng[cheongan]] += 1
-            if jiji in jiji_oheng:
-                oheng_count[jiji_oheng[jiji]] += 1
-    
-    # 분석
-    missing = [k for k, v in oheng_count.items() if v == 0]
-    weak = [k for k, v in oheng_count.items() if v == 1]
-    excess = [k for k, v in oheng_count.items() if v >= 3]
-    
-    return {
-        'count': oheng_count,
-        'missing': missing,
-        'weak': weak,
-        'excess': excess
-    }
+    try:
+        # saju_analysis_engine의 정교한 분석 함수 사용
+        from saju_analysis_engine import analyze_oheng_distribution as engine_analyze
+        
+        result = engine_analyze(manse_info)
+        
+        # 한자 오행을 한글로 변환
+        count_kr = {hanja_to_kr.get(k, k): v for k, v in result.count.items()}
+        missing_kr = [hanja_to_kr.get(m, m) for m in result.missing]
+        weak_kr = [hanja_to_kr.get(w, w) for w in result.weak]
+        excess_kr = [hanja_to_kr.get(e, e) for e in result.excess]
+        
+        return {
+            'count': count_kr,
+            'missing': missing_kr,
+            'weak': weak_kr,
+            'excess': excess_kr
+        }
+    except (ImportError, Exception):
+        # Fallback: 간단한 로직 (saju_data.py의 중앙화된 상수 사용)
+        oheng_count = {'목': 0, '화': 0, '토': 0, '금': 0, '수': 0}
+        
+        for pillar_key in ['년주', '월주', '일주', '시주']:
+            pillar = manse_info.get(pillar_key, '')
+            if len(pillar) >= 2:
+                for char in pillar[:2]:
+                    oheng_hanja = O_HAENG_MAP.get(char, '')
+                    if oheng_hanja:
+                        oheng_kr = hanja_to_kr.get(oheng_hanja, '')
+                        if oheng_kr in oheng_count:
+                            oheng_count[oheng_kr] += 1
+        
+        missing = [k for k, v in oheng_count.items() if v == 0]
+        weak = [k for k, v in oheng_count.items() if v == 1]
+        excess = [k for k, v in oheng_count.items() if v >= 3]
+        
+        return {
+            'count': oheng_count,
+            'missing': missing,
+            'weak': weak,
+            'excess': excess
+        }
 
 
 def _calculate_yongsin(manse_info: Dict) -> str:
     """
     사주 원국 기반 용신(用神)을 정확하게 산출합니다.
     
-    ★ 개선: 단순히 월지만 보지 않고, 실제 오행 분포를 분석하여
-    부족한 기운을 보완하는 방식으로 용신 산출
-    
-    용신 판단 우선순위:
-    1. 조후용신 (계절 조절) - 여름엔 수, 겨울엔 화 (해당 오행이 없을 때만)
-    2. 억부용신 (신강/신약 조절) - 신강이면 설기, 신약이면 생조
-    3. 병약용신 (병이 있으면 약) - 특정 오행 과다 시 억제
-    4. 부족 오행 보충
+    🔧 리팩토링: saju_analysis_engine.determine_yongsin()을 우선 호출
     
     Returns:
         str: '목', '화', '토', '금', '수' 중 하나
     """
+    # 한자→한글 변환 맵
+    yongsin_hanja_to_kr = {'木': '목', '火': '화', '土': '토', '金': '금', '水': '수'}
+    
     try:
-        # 새로운 분석 엔진 사용
+        # saju_analysis_engine의 정교한 용신 판단 함수 사용
         from saju_analysis_engine import determine_yongsin, analyze_oheng_distribution, determine_gangwak
         
         oheng_dist = analyze_oheng_distribution(manse_info)
         gangwak = determine_gangwak(manse_info, oheng_dist)
         yongsin_result = determine_yongsin(manse_info, gangwak, oheng_dist)
         
-        # 한자 오행을 한글로 변환
-        yongsin_hanja_to_kr = {'木': '목', '火': '화', '土': '토', '金': '금', '水': '수'}
         return yongsin_hanja_to_kr.get(yongsin_result.yongsin, '수')
         
-    except ImportError:
-        # fallback: 기존 로직 (saju_analysis_engine 없을 때)
+    except (ImportError, Exception):
+        # Fallback: 간단한 로직
         wolji = manse_info.get('월주', '')[1] if len(manse_info.get('월주', '')) > 1 else ''
         ilgan = manse_info.get('일주', '')[0] if len(manse_info.get('일주', '')) > 0 else ''
         
-        # 먼저 오행 분포 확인
         oheng_analysis = _analyze_oheng_distribution(manse_info)
         
-        # 토 월지지만, 목이 이미 많으면 목 용신 X
-        if wolji in ['辰', '戌', '丑', '未']:
-            if oheng_analysis['count'].get('목', 0) < 3:  # 목이 3개 미만일 때만
-                return '목'
-        
-        # 여름 월지 (巳午) → 수(水) 선 용신 (수가 없을 때만)
-        if wolji in ['巳', '午']:
-            if oheng_analysis['count'].get('수', 0) == 0:
-                return '수'
-        
-        # 겨울 월지 (亥子) → 화(火) 선 용신 (화가 없을 때만)
-        if wolji in ['亥', '子']:
-            if oheng_analysis['count'].get('화', 0) == 0:
-                return '화'
-        
+        # 토 월지 → 목 선 용신
+        if wolji in ['辰', '戌', '丑', '未'] and oheng_analysis['count'].get('목', 0) < 3:
+            return '목'
+        # 여름 월지 → 수 선 용신
+        if wolji in ['巳', '午'] and oheng_analysis['count'].get('수', 0) == 0:
+            return '수'
+        # 겨울 월지 → 화 선 용신
+        if wolji in ['亥', '子'] and oheng_analysis['count'].get('화', 0) == 0:
+            return '화'
         # 부족한 오행 보충
         if oheng_analysis['missing']:
             return oheng_analysis['missing'][0]
         if oheng_analysis['weak']:
             return oheng_analysis['weak'][0]
         
-        # 일간 기준 인성 오행
-        ilgan_yongsin_default = {
-            '甲': '수', '乙': '수', '丙': '목', '丁': '목', '戊': '화',
-            '己': '화', '庚': '토', '辛': '토', '壬': '금', '癸': '금',
-        }
-        return ilgan_yongsin_default.get(ilgan, '수')
+        # 기본값: 일간 기준 인성 오행
+        ilgan_yongsin = {'甲': '수', '乙': '수', '丙': '목', '丁': '목', '戊': '화',
+                         '己': '화', '庚': '토', '辛': '토', '壬': '금', '癸': '금'}
+        return ilgan_yongsin.get(ilgan, '수')
 
 
 def _get_sipsin_pattern(manse_info: Dict) -> Dict:
