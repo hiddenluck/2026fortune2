@@ -74,8 +74,11 @@ CHAR_TO_OHENG_ENG = {
 # 역할: 만세력 계산 및 분석에 필요한 모든 상수와 커스터마이징된 점수 및 규칙을 보관합니다.
 # 이 파일은 CSV 파일 없이 독립적으로 작동하도록 모든 점수표(딕셔너리)를 내장합니다.
 
-# 60갑자 (CHEONGAN, JIJI는 위에서 이미 정의됨)
-GANJI_60 = [c + j for c in CHEONGAN for j in JIJI][:60]
+# 60갑자 (六十甲子) - 정확한 육십갑자 순환 생성
+# 천간(10개)과 지지(12개)가 동시에 순환하며 60개 조합 생성
+# 예: 甲子(0), 乙丑(1), 丙寅(2), 丁卯(3), ... 丙午(42), ... 癸亥(59)
+# 버그 수정: 기존 [c + j for c in CHEONGAN for j in JIJI]는 잘못된 조합 생성
+GANJI_60 = [CHEONGAN[i % 10] + JIJI[i % 12] for i in range(60)]
 
 # DAY_STEM_TO_TIME_STEM_START_INDEX: 일간을 기준으로 子時(자시)의 천간 인덱스 (甲=0)
 # (甲己:甲, 乙庚:丙, 丙辛:戊, 丁壬:庚, 戊癸:壬)
