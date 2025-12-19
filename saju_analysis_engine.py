@@ -32,35 +32,15 @@ from enum import Enum
 import json
 
 # =============================================================================
-# 1. 상수 정의 (saju_data.py에서 필요한 것만 import)
+# 1. 상수 정의 (saju_data.py에서 중앙화된 데이터 import)
+# 🔧 리팩토링: Fallback 제거 - saju_data.py는 핵심 모듈이므로 반드시 존재해야 함
 # =============================================================================
 
-try:
-    from saju_data import (
-        CHEONGAN, JIJI, GANJI_60, O_HAENG_MAP,
-        TEN_GAN_PERSONA, TWELVE_STAR,
-        calculate_total_luck_score, generate_interpretation_flags
-    )
-except ImportError:
-    # Fallback: 기본값 정의
-    CHEONGAN = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
-    JIJI = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
-    GANJI_60 = [CHEONGAN[i % 10] + JIJI[i % 12] for i in range(60)]
-    O_HAENG_MAP = {
-        '甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土',
-        '己': '土', '庚': '金', '辛': '金', '壬': '水', '癸': '水',
-        '子': '水', '丑': '土', '寅': '木', '卯': '木', '辰': '土',
-        '巳': '火', '午': '火', '未': '土', '申': '金', '酉': '金',
-        '戌': '土', '亥': '水'
-    }
-    TEN_GAN_PERSONA = {}
-    TWELVE_STAR = ["장생", "목욕", "관대", "건록", "제왕", "쇠", "병", "사", "묘", "절", "태", "양"]
-    
-    def calculate_total_luck_score(sa_ju_data, luck_data):
-        return {'total': 50}
-    
-    def generate_interpretation_flags(sa_ju_data, luck_data, child_data=None):
-        return {}
+from saju_data import (
+    CHEONGAN, JIJI, GANJI_60, O_HAENG_MAP,
+    TEN_GAN_PERSONA, TWELVE_STAR,
+    calculate_total_luck_score, generate_interpretation_flags
+)
 
 
 # =============================================================================

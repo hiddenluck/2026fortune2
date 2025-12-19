@@ -13,8 +13,11 @@ TARGET_YEAR = 2026
 # [TIER IMPORT] 모듈화된 파일에서 핵심 로직을 가져옵니다.
 # --------------------------------------------------------------------------
 try:
-    # Tier 4/3 공통 상수 임포트
-    from saju_data import TEN_GAN_PERSONA
+    # Tier 4/3 공통 상수 임포트 (중앙화된 데이터 및 유틸 함수)
+    from saju_data import (
+        TEN_GAN_PERSONA,
+        get_oheng_color, to_kr  # 🔧 리팩토링: 중앙화된 함수 사용
+    )
     
     # 🔧 수정: saju_engine_final.py에서 정확한 SajuEngine 사용
     from saju_engine_final import SajuEngine, TIME_ZONE, calculate_pillar_sipsin
@@ -44,22 +47,19 @@ except ImportError as e:
     MODULES_READY = False
 
 # --------------------------------------------------------------------------
-# UI 헬퍼 클래스 (Tier 1) - 오행 색상 및 간지 맵핑
+# UI 헬퍼 클래스 (Tier 1) - saju_data.py의 중앙화된 함수 사용
+# 🔧 리팩토링: 중복 매핑 제거, saju_data.py에서 import한 함수 활용
 # --------------------------------------------------------------------------
 class UIEngineHelper:
-    """Streamlit UI 표시를 위한 헬퍼 클래스"""
-    def __init__(self):
-        # 오행 맵핑 (UI용)
-        self.jiji_o_heng_map = {'寅': 'wood', '卯': 'wood', '辰': 'earth', '巳': 'fire', '午': 'fire', '未': 'earth', '申': 'metal', '酉': 'metal', '戌': 'earth', '亥': 'water', '子': 'water', '丑': 'earth', '甲':'wood', '乙':'wood', '丙':'fire', '丁':'fire', '戊':'earth', '己':'earth', '庚':'metal', '辛':'metal', '壬':'water', '癸':'water'}
-        self.color_map = {'wood':'#388E3C', 'fire':'#D32F2F', 'earth':'#FBC02D', 'metal':'#757575', 'water':'#1976D2'}
-        self.hanja_to_kr = {'甲':'갑', '乙':'을', '丙':'병', '丁':'정', '戊':'무', '己':'기', '庚':'경', '辛':'신', '壬':'임', '癸':'계', '子':'자', '丑':'축', '寅':'인', '卯':'묘', '辰':'진', '巳':'사', '午':'오', '未':'미', '申':'신', '酉':'유', '戌':'술', '亥':'해'}
-
+    """Streamlit UI 표시를 위한 헬퍼 클래스 (saju_data.py 중앙화 데이터 사용)"""
+    
     def get_color_class(self, char: str) -> str:
-        oheng = self.jiji_o_heng_map.get(char)
-        return self.color_map.get(oheng, '#555555')
+        """천간/지지 문자의 오행 색상 코드 반환 (saju_data.get_oheng_color 위임)"""
+        return get_oheng_color(char)
     
     def get_kr(self, char: str) -> str:
-        return self.hanja_to_kr.get(char, char)
+        """한자를 한글 독음으로 변환 (saju_data.to_kr 위임)"""
+        return to_kr(char)
     
 UI_ENG = UIEngineHelper()
 

@@ -8,7 +8,8 @@ CHEONGAN = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'
 # 2. 12지지 (十二地支)
 JIJI = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
 
-# 3. 60갑자 (六十甲子)
+# 3. 60갑자 (六十甲子) - 수동 정의
+# 참고: GANJI_60 (아래 자동 생성)을 주로 사용. 이 변수는 하위 호환용으로 유지.
 GANJI = [
     '甲子', '乙丑', '丙寅', '丁卯', '戊辰', '己巳', '庚午', '辛未', '壬申', '癸酉',
     '甲戌', '乙亥', '丙子', '丁丑', '戊寅', '己卯', '庚辰', '辛巳', '壬午', '癸未',
@@ -27,13 +28,45 @@ YEAR_STEM_TO_MONTH_STEM_INDEX = {
     '戊': 0, '癸': 0  # 甲寅 시작
 }
 
-# 5. 오행 맵 (간단 버전, 오류 방지용)
+# 5. 오행 맵 (천간/지지 → 오행)
+# 모든 파일에서 이 상수를 import하여 사용 (중앙화)
 O_HAENG_MAP = {
     '甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土', 
     '己': '土', '庚': '金', '辛': '金', '壬': '水', '癸': '水', 
     '子': '水', '丑': '土', '寅': '木', '卯': '木', '辰': '土', 
     '巳': '火', '午': '火', '未': '土', '申': '金', '酉': '金', 
     '戌': '土', '亥': '水'
+}
+
+# 6. 한자 → 한글 독음 매핑 (중앙화된 상수)
+# app.py, report_generator.py 등에서 import하여 사용
+HANJA_TO_KR = {
+    # 천간 (十天干)
+    '甲': '갑', '乙': '을', '丙': '병', '丁': '정', '戊': '무',
+    '己': '기', '庚': '경', '辛': '신', '壬': '임', '癸': '계',
+    # 지지 (十二地支)
+    '子': '자', '丑': '축', '寅': '인', '卯': '묘', '辰': '진',
+    '巳': '사', '午': '오', '未': '미', '申': '신', '酉': '유',
+    '戌': '술', '亥': '해',
+    # 오행 (五行)
+    '木': '목', '火': '화', '土': '토', '金': '금', '水': '수'
+}
+
+# 7. 오행 → 색상 매핑 (UI용, 중앙화)
+# app.py UIEngineHelper에서 사용하던 것을 중앙화
+OHENG_TO_COLOR = {
+    'wood': '#388E3C', 'fire': '#D32F2F', 'earth': '#FBC02D',
+    'metal': '#757575', 'water': '#1976D2'
+}
+
+# 8. 천간/지지 → 오행 영문 매핑 (UI 색상 결정용, 중앙화)
+# app.py의 jiji_o_heng_map을 대체
+CHAR_TO_OHENG_ENG = {
+    '甲': 'wood', '乙': 'wood', '丙': 'fire', '丁': 'fire', '戊': 'earth',
+    '己': 'earth', '庚': 'metal', '辛': 'metal', '壬': 'water', '癸': 'water',
+    '子': 'water', '丑': 'earth', '寅': 'wood', '卯': 'wood', '辰': 'earth',
+    '巳': 'fire', '午': 'fire', '未': 'earth', '申': 'metal', '酉': 'metal',
+    '戌': 'earth', '亥': 'water'
 }
 
 # saju_data.py
@@ -265,6 +298,44 @@ JIJI_O_HENG = {
 def get_oheng(jiji: str) -> str:
     """지지 글자의 대표 오행을 반환 (Returns the representative element of the earthly branch)"""
     return JIJI_O_HENG.get(jiji, '')
+
+# --------------------------------------------------------------------------------
+# 4.3.1. 중앙화된 변환 유틸 함수
+# 다른 모듈에서 import하여 사용 (app.py, report_generator.py 등)
+# --------------------------------------------------------------------------------
+
+def to_oheng(char: str) -> str:
+    """
+    천간 또는 지지 문자를 오행으로 변환
+    사용: from saju_data import to_oheng
+    예시: to_oheng('甲') -> '木', to_oheng('子') -> '水'
+    """
+    return O_HAENG_MAP.get(char, '')
+
+def to_kr(char: str) -> str:
+    """
+    한자(천간/지지/오행)를 한글 독음으로 변환
+    사용: from saju_data import to_kr
+    예시: to_kr('甲') -> '갑', to_kr('子') -> '자', to_kr('木') -> '목'
+    """
+    return HANJA_TO_KR.get(char, char)
+
+def to_oheng_eng(char: str) -> str:
+    """
+    천간 또는 지지 문자를 영문 오행명으로 변환 (UI 색상용)
+    사용: from saju_data import to_oheng_eng
+    예시: to_oheng_eng('甲') -> 'wood', to_oheng_eng('子') -> 'water'
+    """
+    return CHAR_TO_OHENG_ENG.get(char, '')
+
+def get_oheng_color(char: str) -> str:
+    """
+    천간 또는 지지 문자의 오행 색상 코드 반환
+    사용: from saju_data import get_oheng_color
+    예시: get_oheng_color('甲') -> '#388E3C' (녹색)
+    """
+    oheng_eng = CHAR_TO_OHENG_ENG.get(char, '')
+    return OHENG_TO_COLOR.get(oheng_eng, '#555555')
 
 def check_geuk(oheng1: str, oheng2: str) -> bool:
     """오행1이 오행2를 극(剋)하는지 확인 (Checks if Element 1 clashes with Element 2)"""
