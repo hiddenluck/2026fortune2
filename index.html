@@ -3,18 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>희구소 Hidden Luck Lab</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <meta property="og:title" content="희구소 사주 리포트 - hiddenluck.co.kr">
-    <meta property="og:description" content="2026년 당신만의 맞춤 신년사주 리포트, 희구소와 함께 운을 찾아요">
-    <meta property="og:image" content="https://hiddenluck.co.kr/og-image.png">
-    <meta property="og:url" content="https://hiddenluck.co.kr/">
-    <meta property="og:type" content="website">
-
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="희구소 사주 리포트 - hiddenluck.co.kr">
-    <meta name="twitter:description" content="2026년 당신만의 맞춤 신년사주 리포트, hiddenluck 사주 상담 서비스.">
-    <meta name="twitter:image" content="https://hiddenluck.co.kr/og-image.png">
+    <title>희구소: 2026 마스터 리포트 상세페이지</title>
     
     <!-- 폰트: 우아한 명조체(Gowun Batang) & 모던한 고딕(Pretendard) -->
     <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
@@ -24,315 +13,721 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
+        /* ==================== Reset & Variables ==================== */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
         :root {
-            /* 브랜드 컬러 팔레트: 차분한 파스텔 */
-            --glass-bg: rgba(255, 255, 255, 0.4);
-            --glass-border: rgba(255, 255, 255, 0.6);
-            --glass-shadow: 0 8px 32px 0 rgba(100, 100, 100, 0.05); /* 그림자도 연하게 */
-            --text-color: #5D4D40; /* 짙은 갈색 텍스트 */
-            --accent-color: #FF8F7D; /* 부드러운 코랄 포인트 */
-        }
+            /* 🎨 Glass Theme Variables */
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-card-bg: rgba(255, 255, 255, 0.65);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.8);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+            
+            /* Text Colors */
+            --text-main: #4A3B32; /* 짙은 브라운 */
+            --text-sub: #6B5B4E;  /* 부드러운 브라운 */
+            --text-highlight: #D67D65; /* 강조 텍스트 */
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+            /* Point Colors */
+            --point-peach: #FF8F7D;
+            --point-mint: #5CD1C4;
+            --point-gold: #EAB543;
+            
+            /* Fonts */
+            --font-h1: 2.0rem;
+            --font-h2: 1.6rem;
+            --font-body: 1.05rem;
         }
 
         body {
             font-family: 'Pretendard', sans-serif;
-            /* 민트 - 피치 - 베이지 - 옐로우 파스텔 그라디언트 */
+            /* 파스텔 그라디언트 배경 */
             background: linear-gradient(-45deg, #B5EAD7, #FFDAC1, #FDF5E6, #FFF5BA);
             background-size: 400% 400%;
-            animation: gradientBG 20s ease infinite; /* 속도를 더 느리게 해서 차분하게 */
+            animation: gradientBG 20s ease infinite;
+            color: var(--text-main);
+            line-height: 1.65;
+            word-break: keep-all;
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: var(--text-color);
             overflow-x: hidden;
         }
 
-        /* 배경 애니메이션 */
         @keyframes gradientBG {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
 
-        /* 배경에 떠다니는 신비로운 오브젝트 (색상 조정) */
+        /* 배경 오브젝트 (Orbs) */
         .orb {
             position: absolute;
             border-radius: 50%;
-            filter: blur(60px); /* 블러를 줄여서 좀 더 형태감 있게 */
-            z-index: 0;
+            filter: blur(50px);
+            z-index: -1;
             animation: float 12s infinite ease-in-out;
-            opacity: 0.6; /* 은은하게 */
-        }
-        
-        /* 민트/그린 계열 오브브 */
-        .orb-1 { 
-            width: 350px; 
-            height: 350px; 
-            background: #C7F9CC; 
-            top: -50px; 
-            left: -50px; 
-            animation-delay: 0s; 
-        }
-        
-        /* 피치/웜 계열 오브 */
-        .orb-2 { 
-            width: 400px; 
-            height: 400px; 
-            background: #FFD3B6; 
-            bottom: -80px; 
-            right: -80px; 
-            animation-delay: -6s; 
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-40px) scale(1.05); }
-        }
-
-        /* 메인 컨테이너 (유리 카드) */
-        .container {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            max-width: 480px;
-            min-height: 90vh;
-            margin: 20px;
-            /* 배경을 좀 더 하얗고 불투명하게 해서 가독성 확보 */
-            background: rgba(255, 255, 255, 0.35);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.7);
-            box-shadow: var(--glass-shadow);
-            padding: 40px 30px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* 프로필 영역 */
-        .profile-section {
-            margin-bottom: 30px;
-        }
-
-        .avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            border: 4px solid rgba(255, 255, 255, 0.8);
-            box-shadow: 0 10px 20px rgba(166, 142, 133, 0.1);
-            object-fit: cover;
-            margin-bottom: 20px;
-            /* 펄스 애니메이션 제거하고 정적인 고급스러움 유지 */
-        }
-
-        /* 텍스트 로고 스타일 */
-        .brand-heading {
-            font-family: 'Gowun Batang', serif;
-            font-size: 1.8rem; /* 크기 조정 */
-            font-weight: 700;
-            margin-bottom: 15px;
-            color: #4A3B32; /* 짙은 갈색 */
-            letter-spacing: -1px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        .bio-text {
-            font-family: 'Gowun Batang', serif;
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 40px;
-            color: #6B5B4E; /* 조금 더 부드러운 브라운 */
-            font-weight: 600;
-        }
-
-        /* 링크 버튼 영역 */
-        .links {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .link-btn {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 18px 25px;
-            background: rgba(255, 255, 255, 0.6); /* 버튼 배경을 더 밝게 */
-            border: 1px solid #fff;
-            border-radius: 20px; /* 더 둥글게 */
-            text-decoration: none;
-            color: var(--text-color);
-            font-weight: 700;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-            backdrop-filter: blur(5px);
-            overflow: visible;
-            z-index: 1;
-        }
-
-        .link-btn:hover {
-            transform: translateY(-3px);
-            background: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-        }
-
-        .btn-icon {
-            font-size: 1.4rem;
-            width: 30px;
-            text-align: center;
-            color: var(--accent-color);
-            position: relative;
-            z-index: 2;
-        }
-
-        .btn-text {
-            flex-grow: 1;
-            text-align: center;
-            margin-right: 30px;
-            position: relative;
-            z-index: 2;
-        }
-
-        /* 강조 버튼 (세 번째) */
-        .link-btn.highlight {
-            background: rgba(255, 255, 255, 0.85);
-            border: 2px solid #FFDAC1; /* 피치색 테두리 */
-            color: #D67D65;
-        }
-        
-        .shine-layer {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            border-radius: 18px; /* 버튼 radius에 맞춤 */
-            overflow: hidden;
-            z-index: 1;
+            opacity: 0.7;
             pointer-events: none;
         }
         
-        .shine-layer::after {
-            content: '';
-            position: absolute;
-            top: 0; left: -100%;
-            width: 50%;
-            height: 100%;
-            background: linear-gradient(to right, transparent, rgba(255,218,193,0.4), transparent); /* 웜톤 샤인 */
-            transform: skewX(-25deg);
-            animation: shine 3s infinite;
+        .orb-1 { width: 300px; height: 300px; background: #C7F9CC; top: 5%; left: -10%; }
+        .orb-2 { width: 350px; height: 350px; background: #FFD3B6; top: 40%; right: -15%; animation-delay: -4s; }
+        .orb-3 { width: 250px; height: 250px; background: #FFF5BA; bottom: 10%; left: 10%; animation-delay: -8s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.05); }
         }
 
-        @keyframes shine {
-            100% { left: 200%; }
+        /* 모바일 컨테이너 */
+        .page-container {
+            max-width: 480px;
+            margin: 20px auto;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 30px;
+            border: var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(100, 100, 100, 0.1);
+            overflow: hidden;
+            padding-bottom: 120px;
+            min-height: 95vh;
         }
 
-        .tag-new {
-            position: absolute;
-            top: -12px;
-            right: 15px;
-            background: #FF8F7D; /* 코랄 핑크 */
-            color: white;
-            font-size: 0.75rem;
-            padding: 5px 12px;
-            border-radius: 15px;
+        /* ==================== Header ==================== */
+        header {
+            padding: 20px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(5px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .logo {
+            height: 72px;
+            object-fit: contain;
+        }
+
+        /* ==================== Typography & Highlight ==================== */
+        h1, h2, h3 { font-family: 'Gowun Batang', serif; letter-spacing: -0.03em; }
+        
+        .text-peach { color: var(--point-peach); }
+        .text-mint { color: #4DB6AC; }
+        .text-fire { color: #FF5E62; } /* 불의 기운 강조 */
+        
+        .highlight {
+            background: linear-gradient(to top, rgba(255, 218, 193, 0.5) 40%, transparent 40%);
+            padding: 0 4px;
+        }
+
+        /* ==================== Hero Section ==================== */
+        .hero {
+            padding: 50px 24px 60px 24px;
+            text-align: center;
+        }
+
+        .hero-tag {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--point-peach);
+            padding: 6px 16px;
+            border-radius: 20px;
             font-weight: 800;
-            box-shadow: 0 4px 10px rgba(255, 143, 125, 0.3);
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(255, 143, 125, 0.2);
+            border: 1px solid white;
             animation: bounce 2s infinite;
-            z-index: 10;
+        }
+
+        .hero-title {
+            font-size: var(--font-h1);
+            line-height: 1.35;
+            margin-bottom: 20px;
+            color: var(--text-main);
+            text-shadow: 0 2px 10px rgba(255,255,255,0.5);
+        }
+
+        .hero-desc {
+            font-size: var(--font-body);
+            color: var(--text-sub);
+            margin-bottom: 40px;
+        }
+
+        /* VS Visual (Glass Card) */
+        .vs-visual {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--glass-card-bg);
+            padding: 25px;
+            border-radius: 24px;
+            border: var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            position: relative;
+        }
+
+        .vs-item { flex: 1; text-align: center; }
+        .vs-icon { font-size: 3rem; margin-bottom: 10px; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+        .vs-price { font-weight: 800; font-size: 1.3rem; display: block; color: var(--text-main); }
+        .vs-label { font-size: 0.85rem; color: var(--text-sub); margin-top: 5px; display: block;}
+        
+        .vs-divider {
+            position: absolute; left: 50%; top: 50%;
+            transform: translate(-50%, -50%);
+            background: #FFF;
+            width: 36px; height: 36px;
+            line-height: 36px; text-align: center;
+            border-radius: 50%;
+            font-weight: 900; color: #DDD;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: 0.9rem;
+        }
+
+        /* ==================== Story Box (Glass) ==================== */
+        .story-box {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 30px;
+            border-radius: 24px;
+            border: var(--glass-border);
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: var(--glass-shadow);
+        }
+
+        .story-text { margin-bottom: 20px; font-size: 1.05rem; }
+
+        /* ==================== Why 2026 Section (Red Horse) ==================== */
+        .red-horse-section {
+            position: relative;
+            padding: 70px 24px 60px 24px;
+            overflow: hidden;
+            color: white; /* 텍스트 흰색으로 변경 (배경 대비) */
+        }
+
+        /* 붉은 말 배경 이미지 (강렬하게) */
+        .red-horse-bg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(1.1);
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.85; /* 불투명도 높임 */
+            z-index: 0;
+            pointer-events: none;
+            mix-blend-mode: multiply; /* 배경과 혼합 */
+            filter: contrast(1.1) brightness(0.9);
         }
         
-        .tag-new::after {
+        /* 붉은 말 섹션 그라데이션 오버레이 */
+        .red-horse-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.1), rgba(200, 50, 50, 0.2));
+            z-index: 0;
+        }
+
+        .why-2026-box {
+            position: relative; /* z-index 적용을 위해 */
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.9); /* 가독성 위해 배경 밝게 (투명도 조절) */
+            backdrop-filter: blur(12px);
+            padding: 35px 24px;
+            border-radius: 24px;
+            border: 2px solid rgba(255, 94, 98, 0.4);
+            text-align: left;
+            margin-bottom: 20px;
+            box-shadow: 0 15px 40px rgba(180, 50, 50, 0.3);
+        }
+
+        .why-title {
+            position: relative;
+            z-index: 2;
+            font-family: 'Gowun Batang', serif;
+            font-size: 1.5rem;
+            color: #C0392B; /* 텍스트를 진한 붉은색으로 */
+            margin-bottom: 20px;
+            font-weight: 800;
+            text-shadow: 2px 2px 0px rgba(255,255,255,0.8);
+            line-height: 1.4;
+        }
+
+        /* ==================== Authority (Certifications) ==================== */
+        .cert-item {
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 20px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.6);
+            transition: transform 0.3s;
+        }
+        
+        .cert-item:hover { transform: translateY(-5px); background: rgba(255,255,255,0.9); }
+        .cert-img { width: 100%; height: 90px; object-fit: contain; margin-bottom: 10px; mix-blend-mode: multiply; }
+
+        /* ==================== Feature List ==================== */
+        .feature-item {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 24px;
+            overflow: hidden;
+            border: var(--glass-border);
+            margin-bottom: 20px;
+            box-shadow: var(--glass-shadow);
+        }
+
+        .feature-header {
+            background: rgba(255, 240, 230, 0.6);
+            padding: 15px 24px;
+            display: flex; align-items: center; justify-content: center;
+            gap: 10px;
+        }
+
+        .feature-header i { color: var(--point-peach); font-size: 1.2rem; }
+        .feature-header span { font-weight: 800; color: var(--text-main); font-family: 'Gowun Batang', serif; }
+        
+        .feature-body { padding: 24px; text-align: center; }
+
+        /* ==================== Preview Gallery ==================== */
+        .preview-container {
+            margin-top: 30px;
+            overflow-x: auto;
+            display: flex;
+            gap: 15px;
+            padding-bottom: 20px;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+        }
+        .preview-container::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+        .preview-img {
+            min-width: 280px; /* 고정 너비로 가로 스크롤 유도 */
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border: 2px solid white;
+            transition: transform 0.3s;
+        }
+        
+        /* ==================== Reviews ==================== */
+        .review-card {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            border: 1px solid white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        }
+
+        /* ==================== Packages ==================== */
+        .package-card {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            padding: 35px 24px;
+            margin-bottom: 30px;
+            position: relative;
+            border: var(--glass-border);
+            transition: transform 0.2s;
+        }
+
+        .pkg-basic { border: 2px solid rgba(92, 209, 196, 0.3); } 
+        
+        .pkg-premium {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 240, 235, 0.9));
+            border: 2px solid var(--point-peach);
+            box-shadow: 0 15px 40px rgba(255, 143, 125, 0.2);
+            transform: scale(1.02);
+            z-index: 10;
+        }
+
+        .pkg-title { font-size: 1.4rem; font-weight: 800; text-align: center; margin-bottom: 5px; font-family: 'Gowun Batang', serif; }
+        .pkg-price { font-size: 2.2rem; font-weight: 800; text-align: center; margin-bottom: 20px; letter-spacing: -1px; }
+        .pkg-price sub { font-size: 0.9rem; font-weight: 500; color: var(--text-sub); }
+
+        .check-list { list-style: none; padding-left: 0; margin: 0; }
+        .check-list li { margin-bottom: 12px; padding-left: 26px; position: relative; font-size: 1.05rem; }
+        .check-list li::before {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; left: 0; top: 3px; color: var(--point-mint);
+        }
+        .pkg-premium .check-list li::before { color: var(--point-peach); }
+
+        /* ==================== Urgency ==================== */
+        .urgency-banner {
+            background: rgba(74, 59, 50, 0.9);
+            backdrop-filter: blur(10px);
+            color: #FFF5E6;
+            padding: 40px 24px;
+            text-align: center;
+            border-radius: 24px;
+            margin: 30px 24px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .d-day {
+            font-size: 3.5rem; font-weight: 900; color: var(--point-peach);
+            margin: 10px 0 20px 0; text-shadow: 0 0 20px rgba(255, 143, 125, 0.5);
+            font-family: 'Pretendard', sans-serif;
+        }
+
+        /* ==================== CTA Button (수정됨) ==================== */
+        .bottom-cta {
+            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
+            width: calc(100% - 40px); max-width: 440px; z-index: 1000;
+        }
+
+        .cta-btn {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            width: 100%;
+            /* 눈에 띄는 피치/코랄 그라데이션 */
+            background: linear-gradient(135deg, #FF8F7D 0%, #FF6B6B 100%);
+            color: white;
+            padding: 18px 0; /* 조금 더 두껍게 */
+            border-radius: 24px; /* 더 둥글게 */
+            text-decoration: none;
+            box-shadow: 0 15px 35px rgba(255, 107, 107, 0.4); /* 그림자 강화 */
+            border: 2px solid rgba(255,255,255,0.3); /* 살짝 빛나는 테두리 */
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 버튼 내 조명 효과 애니메이션 추가 */
+        .cta-btn::after {
             content: '';
             position: absolute;
-            bottom: -4px;
-            left: 50%;
-            transform: translateX(-50%);
-            border-width: 5px 5px 0;
-            border-style: solid;
-            border-color: #FF8F7D transparent transparent transparent;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
+            transform: skewX(-20deg) translateX(-150%);
+            animation: shine 3s infinite;
         }
+        
+        @keyframes shine {
+            0% { transform: skewX(-20deg) translateX(-150%); }
+            20% { transform: skewX(-20deg) translateX(150%); }
+            100% { transform: skewX(-20deg) translateX(150%); }
+        }
+        
+        .cta-btn:active { transform: scale(0.96); }
 
+        .cta-main { font-size: 1.3rem; font-weight: 800; margin-bottom: 2px; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .cta-sub { font-size: 0.9rem; font-weight: 600; color: rgba(255,255,255,0.95); }
+        
+        .section { padding: 50px 24px; }
+        .section-title { font-size: var(--font-h2); font-weight: 800; text-align: center; margin-bottom: 30px; }
+        
         @keyframes bounce {
             0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
-            40% {transform: translateY(-5px);}
+            40% {transform: translateY(-6px);}
             60% {transform: translateY(-3px);}
-        }
-
-        footer {
-            margin-top: auto;
-            padding-top: 40px;
-            font-size: 0.8rem;
-            color: rgba(93, 77, 64, 0.6);
-        }
-
-        @media (max-width: 400px) {
-            .container { padding: 30px 20px; }
-            .brand-heading { font-size: 1.6rem; }
-            .link-btn { padding: 15px 20px; font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
 
-    <!-- 배경 효과: 민트 & 피치 오브 -->
+    <!-- 배경 애니메이션 오브 -->
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
-    <div class="container">
-        <!-- 프로필 및 로고 영역 -->
-        <div class="profile-section">
-            <img src="https://i.ibb.co/67XjdSMD/4.png" alt="희구소 프로필" class="avatar">
+<div class="page-container">
+    <!-- Header -->
+    <header>
+        <img src="https://i.ibb.co/Zzp4y2RM/tranlogo.png" alt="희구소 로고" class="logo">
+    </header>
+
+    <!-- 1. Hero Section -->
+    <section class="hero">
+        <span class="hero-tag">2026 입춘 한정 혜택</span>
+        <h1 class="hero-title">
+            왜 2026년을 앞두고<br>
+            <span class="text-fire">스캔들</span>이 터질까요?
+        </h1>
+        <p class="hero-desc" style="font-weight: 500; font-size:1.1rem; line-height:1.6;">
+            감춰둔 모든 것이 드러나는 <strong>병오년(丙午年).</strong><br>
+            내 사주는 이 강력한 불기운을 견딜 수 있을까요?<br>
             <br>
-            <!-- 네모 로고 이미지를 텍스트 헤딩으로 교체 -->
-            <h1 class="brand-heading">희구소 : Hidden Luck Lab</h1>
-            <p class="bio-text">
-                좋은 운에도, 나쁜 운에도<br>
-                언제나 길은 있고, 당신의 때는 와요.<br>
-                당신의 숨겨진 행운까지 찾아냅니다.
+            불안해만 하지 마세요.<br>
+            <strong>커피 한 잔 값</strong>으로 당신의 1년 안전을 확인하세요.
+        </p>
+
+        <!-- Visual Hook (Glass Card) -->
+        <div class="vs-visual">
+            <div class="vs-item">
+                <span class="vs-icon" style="color: #6F4E37;">☕</span>
+                <span class="vs-price">₩4,700</span>
+                <span class="vs-label">2시간의<br>카페인</span>
+            </div>
+            <div class="vs-divider">VS</div>
+            <div class="vs-item">
+                <span class="vs-icon" style="color: var(--point-mint);">📱</span>
+                <span class="vs-price">₩4,700</span>
+                <span class="vs-label">1년치의<br>안전벨트</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. Why 2026? (Emotional Story with Red Horse Image) -->
+    <section class="red-horse-section">
+        <!-- 붉은 말 이미지 배경 삽입 (크고 강렬하게) -->
+        <img src="https://i.ibb.co/pBd1ydgM/image.png" alt="붉은 말" class="red-horse-bg">
+        <div class="red-horse-overlay"></div>
+        
+        <h2 class="why-title">
+            "연예계뿐만이 아닙니다.<br>
+            당신의 <span style="border-bottom:2px solid #C0392B;">비밀</span>도 위험합니다."
+        </h2>
+        
+        <!-- 텍스트 색상 진한 회색으로 변경 (color: #4A3B32) -->
+        <div class="why-2026-box">
+            <p class="story-text" style="text-align: left; font-weight:700; color:#C0392B; margin-bottom:15px;">
+                "모든 것이 드러나는 해, 병오년"
+            </p>
+            <p class="story-text" style="text-align: left; color:#4A3B32;">
+                2026년 병오년은 위로는 태양, 아래로는 용광로.<br>
+                천지가 불로 뒤덮이는 해입니다.
+            </p>
+            <p class="story-text" style="text-align: left; color:#4A3B32;">
+                어둠 속에 숨겨왔던 치부, 비밀, 거짓말이<br>
+                대낮의 햇빛 아래 낱낱이 드러납니다.<br>
+                준비되지 않은 자에게는 <strong>가혹한 폭로의 해</strong>가 될 것입니다.
+            </p>
+            <p class="story-text" style="text-align: left; color:#4A3B32;">
+                하지만 두려워만 할 필요는 없습니다.<br>
+                불은 <strong>모든 것을 태우지만, 어둠을 밝히기도 하니까요.</strong><br>
+                <span class="highlight" style="background:linear-gradient(to top, rgba(255, 94, 98, 0.3) 40%, transparent 40%);">내 사주가 이 불을 다스릴 그릇인지</span><br>
+                지금 확인해야 합니다.
             </p>
         </div>
+        
+        <div style="text-align:center; margin-top:30px; position:relative; z-index:2;">
+            <p style="font-size:1.1rem; font-weight:700; color:#FFF; text-shadow:0 2px 4px rgba(0,0,0,0.5);">그래서, 희구소가 준비했습니다.</p>
+            <i class="fas fa-arrow-down" style="color:#FFF; margin-top:10px; font-size:1.5rem; animation: bounce 2s infinite; filter:drop-shadow(0 2px 2px rgba(0,0,0,0.5));"></i>
+        </div>
+    </section>
 
-        <!-- 링크 버튼 영역 -->
-        <div class="links">
-            <!-- 버튼 1: 1:1 문의 -->
-            <a href="https://open.kakao.com/me/hiddenlucklab" target="_blank" class="link-btn">
-                <i class="fas fa-comments btn-icon"></i>
-                <span class="btn-text">1:1 문의하기</span>
-            </a>
+    <!-- 3. Value Proposition (Coffee Story) -->
+    <section class="section">
+        <h2 class="section-title">
+            "왜 이렇게<br>
+            <span class="text-peach">저렴한가요?</span>"
+        </h2>
+        
+        <div class="story-box">
+            <p class="story-text">
+                <strong>"고객님과 커피 한 잔 하고 싶어서요."</strong><br><br>
+                직접 만나 사주 이야기를 나누고 싶지만,<br>
+                현실적인 제약으로 그럴 수 없어 아쉬웠습니다.
+            </p>
+            <p class="story-text">
+                그래서 생각했습니다.<br>
+                <strong>'커피 한 잔 마시는 기분으로 부담 없이 만나자!'</strong>
+            </p>
+            <p class="story-text" style="margin-bottom:0;">
+                2026년 2월 4일 입춘 전까지,<br>
+                <strong>스타벅스 아메리카노 Tall 사이즈 한 잔 값</strong>으로<br>
+                신년 운세를 보실 수 있게 준비했습니다.<br><br>
+                저와 처음 인연을 맺어주신 분들에 대한 <strong>감사함</strong>이자,<br>
+                당신의 2026년을 응원하는 <strong>저의 작은 진심</strong>입니다.
+            </p>
+        </div>
+    </section>
 
-            <!-- 버튼 2: 단체 톡방 -->
-            <a href="https://open.kakao.com/o/pZmJWO6h" target="_blank" class="link-btn">
-                <i class="fas fa-users btn-icon"></i>
-                <span class="btn-text">희구소 사주 수다 & 질문방</span>
-            </a>
+    <!-- 4. Product Details (Moved Up) -->
+    <section class="section">
+        <h2 class="section-title">
+            100페이지 PDF 대신<br>
+            <span class="text-peach">단 한 장의 대시보드</span>
+        </h2>
+        <p style="text-align:center; color:var(--text-sub); margin-bottom:30px;">
+            읽다 지치는 보고서는 이제 그만.<br>
+            모바일에서 탭하고 스크롤하며 확인하세요.
+        </p>
 
-            <!-- 버튼 3: 신년 운세 (강조) -->
-            <a href="https://litt.ly/hiddenlucky/sale/PsIuTXE" target="_blank" class="link-btn highlight">
-                <span class="tag-new">EVENT</span>
-                <span class="shine-layer"></span>
-                
-                <i class="fas fa-scroll btn-icon"></i>
-                <span class="btn-text">2026 신년 운세 / 이벤트 특가</span>
-            </a>
+        <div class="feature-list">
+            <!-- 👑 특별 차별점: 1:1 Q&A 추가 -->
+            <div class="feature-item" style="border: 2px solid var(--point-peach); transform: scale(1.02);">
+                <div class="feature-header" style="background: rgba(255, 143, 125, 0.15);">
+                    <i class="fas fa-comment-dots" style="color: var(--point-peach);"></i>
+                    <span style="color: var(--point-peach);">희구소만의 특별한 장점</span>
+                </div>
+                <div class="feature-body">
+                    <h3 class="feature-title" style="font-family:'Pretendard'; font-weight:800; color:var(--point-peach);">"궁금한 질문 2가지를 해결해드려요"</h3>
+                    <p class="feature-desc">
+                        일방적인 사주 분석이 아닙니다.<br>
+                        고민이 있어서 사주를 보시잖아요?<br><br>
+                        <strong>고객님이 입력한 가장 궁금한 질문 2가지</strong>에 대해<br>
+                        제가 직접 원국을 분석해 자세한 답을 드립니다.
+                    </p>
+                </div>
+            </div>
+
+            <div class="feature-item">
+                <div class="feature-header">
+                    <i class="fas fa-chart-line"></i>
+                    <span>돈의 흐름 12개월 지도</span>
+                </div>
+                <div class="feature-body">
+                    <h3 class="feature-title" style="font-family:'Pretendard'; font-weight:800;">"언제 벌고, 언제 쉴까?"</h3>
+                    <p class="feature-desc">
+                        1년 운세 그래프로 확인하세요.<br>
+                        <strong>3월의 위기</strong>를 피하고, <strong>10월의 기회</strong>에<br>
+                        에너지를 집중할 수 있습니다.
+                    </p>
+                </div>
+            </div>
+
+            <div class="feature-item">
+                <div class="feature-header">
+                    <i class="fas fa-radar"></i>
+                    <span>나의 5대 사업 스탯</span>
+                </div>
+                <div class="feature-body">
+                    <h3 class="feature-title" style="font-family:'Pretendard'; font-weight:800;">"내 강점은 무엇일까?"</h3>
+                    <p class="feature-desc">
+                        추진력, 수익화, 리더십...<br>
+                        2026년에 <strong>급상승하는 능력치</strong>를<br>
+                        데이터로 시각화해 드립니다.
+                    </p>
+                </div>
+            </div>
         </div>
 
-        <!-- 푸터 -->
-        <footer>
-            © 2025 Hidden Luck Lab. All rights reserved.
-        </footer>
+        <!-- Report Preview Gallery -->
+        <h3 style="text-align:center; font-family:'Gowun Batang', serif; margin-top:40px; font-size:1.2rem; color:var(--text-sub);">
+            👇 실제 리포트 미리보기
+        </h3>
+        <!-- 이미지 추가 및 가로 스크롤 확인 -->
+        <div class="preview-container">
+            <img src="https://i.ibb.co/99bk1rfP/2025-12-14-134405.png" alt="리포트 예시1" class="preview-img">
+            <img src="https://i.ibb.co/m52khGpH/2025-12-14-134528.png" alt="리포트 예시2" class="preview-img">
+            <img src="https://i.ibb.co/JjCR1Kzw/2025-12-14-134610.png" alt="리포트 예시3" class="preview-img">
+            <img src="https://i.ibb.co/cKKxr7t1/2025-12-15-195122.png" alt="리포트 예시4" class="preview-img">
+            <img src="https://i.ibb.co/yBhfRCkm/2025-12-19-155056.png" alt="리포트 예시5" class="preview-img">
+            <img src="https://i.ibb.co/1Yqr6Kvm/2025-12-19-155006.png" alt="리포트 예시6" class="preview-img">
+        </div>
+        <p style="text-align:center; font-size:0.8rem; color:var(--text-sub); margin-top:10px;">
+            (옆으로 넘겨서 확인해보세요)
+        </p>
+    </section>
+
+    <!-- 5. Authority (Certifications) - Moved Here -->
+    <section class="section">
+        <h2 class="section-title">
+            데이터는 정교하게<br>
+            <span class="highlight">해석은 실전 전문가답게</span>
+        </h2>
+        <p style="text-align:center; color:var(--text-sub); margin-bottom:30px;">
+            "이론만 아는 상담사가 아닙니다.<br>
+            <strong>다주택 투자부터 콘텐츠 사업까지</strong><br>
+            직접 부딪혀본 전문가가 설계했습니다."
+        </p>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+            <div class="cert-item">
+                <img src="https://i.ibb.co/Lzk9GSX9/2025-12-12-171848.png" alt="공인중개사" class="cert-img">
+                <span style="font-size:0.95rem; font-weight:700;">공인중개사<br>자격 보유</span>
+            </div>
+            <div class="cert-item">
+                <img src="https://i.ibb.co/Hf643qcT/2025-12-12-171838.png" alt="명리심리" class="cert-img">
+                <span style="font-size:0.95rem; font-weight:700;">명리심리<br>상담사</span>
+            </div>
+            <div class="cert-item">
+                <img src="https://i.ibb.co/ynspG1qg/2025-12-12-171857.png" alt="심리분석" class="cert-img">
+                <span style="font-size:0.95rem; font-weight:700;">심리분석<br>상담사</span>
+            </div>
+            <div class="cert-item">
+                <img src="https://i.ibb.co/x8M4s5yJ/2025-12-12-171906.png" alt="색채심리" class="cert-img">
+                <span style="font-size:0.95rem; font-weight:700;">색채심리<br>상담사</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. Reviews -->
+    <section class="section">
+        <h2 class="section-title">
+            이미 <span class="highlight">입소문</span>만으로<br>
+            검증되었습니다
+        </h2>
+        <div class="review-card">
+            <div style="color:#FFC107; margin-bottom:5px;">★★★★★</div>
+            <p style="font-weight:500; margin-bottom:10px;">"돈 버는 타이밍(9, 10, 11월)이 명확해서 1년 계획이 바로 섰어요. 에너지 낭비 끝!"</p>
+            <p style="font-size:0.85rem; color:#888; text-align:right;">— 30대 워킹맘, 프리랜서</p>
+        </div>
+        <div class="review-card">
+            <div style="color:#FFC107; margin-bottom:5px;">★★★★★</div>
+            <p style="font-weight:500; margin-bottom:10px;">"정부 지원사업이나 신사업 Q&A가 정말 구체적이었어요. 4,700원이 미안할 정도입니다."</p>
+            <p style="font-size:0.85rem; color:#888; text-align:right;">— 20대 후반 여성, N잡러</p>
+        </div>
+    </section>
+
+    <!-- 7. Offer (Packages) -->
+    <section class="section">
+        <h2 class="section-title">
+            2026년 운명을 바꿀<br>
+            <span class="text-peach">단 한 번의 선택</span>
+        </h2>
+
+        <!-- Basic Package -->
+        <div class="package-card pkg-basic">
+            <h3 class="pkg-title" style="color:var(--point-mint);">💫 기본 패키지</h3>
+            <p style="text-align:center; margin-bottom:15px; font-size:0.95rem; color:var(--text-sub);">내 폰 안의 2026 전략 지도</p>
+            <p class="pkg-price">₩4,700 <sub>/ 평생고정</sub></p>
+            <ul class="check-list">
+                <li>2026 마스터 리포트 (Web)</li>
+                <li>월별 재물/투자 골든타임 분석</li>
+                <li>나의 5대 사업 스탯 그래프</li>
+                <li>용어 클릭 즉시 해설 기능</li>
+            </ul>
+        </div>
+
+        <!-- Premium Package -->
+        <div class="package-card pkg-premium">
+            <div style="text-align:center; margin-bottom:10px;">
+                <span style="background:var(--point-peach); color:white; padding:5px 12px; border-radius:15px; font-size:0.8rem; font-weight:700;">👑 추천: 1:1 밀착 케어</span>
+            </div>
+            <h3 class="pkg-title" style="color:var(--text-main);">✨ VIP 전략 패키지</h3>
+            <p style="text-align:center; margin-bottom:15px; font-size:0.95rem; color:var(--text-sub);">지도 + 전문가의 길 안내</p>
+            <p class="pkg-price" style="color:var(--point-peach);">₩34,700 <sub>/ 평생고정</sub></p>
+            
+            <ul class="check-list">
+                <li><strong>기본 패키지 혜택 모두 포함</strong></li>
+                <li style="font-weight:700; color:var(--point-peach);">소장 1:1 집중 카톡 상담 (20분)</li>
+                <li>"이직할까? 투자할까?" 현실 조언</li>
+                <li>개인 상황별 맞춤 전략 수립</li>
+            </ul>
+            <div style="background:rgba(255, 255, 255, 0.6); padding:10px; border-radius:10px; text-align:center; margin-top:20px; font-size:0.9rem;">
+                ⏳ 소장 직접 상담으로 <strong>조기 마감 주의</strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- 8. Urgency -->
+    <div class="urgency-banner">
+        <p style="font-size:1.1rem; opacity:0.9; margin-bottom:10px;">평생 혜택 마감까지</p>
+        <div class="d-day">D-45</div>
+        <p style="font-size:1.1rem; font-weight:700;">
+            2026년 2월 4일 입춘이 지나면<br>
+            <span style="border-bottom:2px solid var(--point-peach); color:var(--point-peach);">할인 혜택은 영구 소멸됩니다.</span>
+        </p>
     </div>
 
+    <!-- Floating CTA -->
+    <div class="bottom-cta">
+        <a href="https://litt.ly/hiddenlucky" class="cta-btn">
+            <span class="cta-main">2026년 전략 지금 확인하기</span>
+            <span class="cta-sub">☕ 커피 한 잔 값으로 평생 혜택 받기</span>
+        </a>
+    </div>
+
+</div>
+
 </body>
-
 </html>
-
